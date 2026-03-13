@@ -1,0 +1,91 @@
+openapi: 3.0.3
+info:
+  title: MaDisk API
+  version: 1.0.0
+  description: REST API для сервиса хранения файлов и папок
+
+servers:
+  - url: /v1
+
+paths:
+  /users:
+    post:
+      summary: Создать нового пользователя
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '201':
+          description: Пользователь успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Некорректные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+
+    UserCreateResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - login
+        - first_name
+        - last_name
+        - created_at
+      properties:
+        id:
+          type: string
+        login:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    UserCreateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - login
+        - password
+        - first_name
+        - last_name
+      properties:
+        login:
+          type: string
+          minLength: 4
+          maxLength: 20
+        password:
+          type: string
+          minLength: 6
+        first_name:
+          type: string
+        last_name:
+          type: string
+    
+    ErrorResponse:
+      type: object
+      additionalProperties: true
+      required:
+        - message
+        - status
+      properties:
+        message:
+          type: string
+        status:
+          type: integer

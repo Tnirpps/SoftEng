@@ -1,0 +1,57 @@
+components_manager:
+    task_processors:
+        main-task-processor:
+            worker_threads: $worker-threads
+        fs-task-processor:
+            worker_threads: $worker-fs-threads
+    default_task_processor: main-task-processor
+
+    components:
+        server:
+            listener:
+                port: $server-port
+                task_processor: main-task-processor
+        logging:
+            fs-task-processor: fs-task-processor
+            loggers:
+                default:
+                    file_path: '@stderr'
+                    level: $logger-level
+                    overflow_behavior: discard
+        dynamic-config: {}
+        testsuite-support: {}
+        http-client:
+        http-client-core:
+            load-enabled: $is_testing
+            fs-task-processor: fs-task-processor
+
+        dns-client:
+            fs-task-processor: fs-task-processor
+
+        tests-control:
+            load-enabled: $is-testing
+            path: /tests/{action}
+            method: POST
+            task_processor: main-task-processor
+
+        handler-ping:
+            path: /ping
+            method: GET
+            task_processor: main-task-processor
+            throttling_enabled: false
+            url_trailing_slash: strict-match
+
+        handler-user-registration:
+            path: /v1/users
+            method: POST,OPTIONS
+            task_processor: main-task-processor
+
+        handler-user-login:
+            path: /v1/users/login
+            method: POST,OPTIONS
+            task_processor: main-task-processor
+
+        auth-repository:
+            initial-users:
+                - nick: admin
+                  pass: secret

@@ -1,0 +1,8 @@
+local/
+.env
+build/
+CMakeUserPresets.json
+__pycache__/
+.pytest_cache/
+.vscode/
+.DS_Store
