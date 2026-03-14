@@ -10,6 +10,7 @@
 #include "handlers/base_handler.hpp"
 #include "schemas/openapi.hpp"
 
+namespace Handlers {
 class RegisterHandler final
     : public Handlers::TypedJsonHandler<Gen::openapi::UserCreateRequest, Gen::openapi::UserCreateResponse,
                                         userver::server::http::HttpStatus::kCreated> {
@@ -27,5 +28,7 @@ class RegisterHandler final
                                        userver::server::request::RequestContext &context) const override;
 
   private:
-    std::shared_ptr<auth::IAuthRepository> auth_repository_;
+    std::shared_ptr<Auth::IAuthRepository> auth_repository_;
 };
+
+} // namespace Handlers

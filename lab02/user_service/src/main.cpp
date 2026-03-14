@@ -20,9 +20,9 @@ int main(int argc, char *argv[]) {
                               .AppendComponentList(userver::clients::http::ComponentList())
                               .Append<userver::clients::dns::Component>()
                               .Append<userver::server::handlers::TestsControl>()
-                              .Append<RegisterHandler>()
-                              .Append<LoginHandler>()
-                              .Append<auth::AuthComponent>();
+                              .Append<Handlers::RegisterHandler>()
+                              .Append<Handlers::LoginHandler>()
+                              .Append<Auth::AuthComponent>();
 
     return userver::utils::DaemonMain(argc, argv, component_list);
 }

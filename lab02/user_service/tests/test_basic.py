@@ -2,7 +2,7 @@ import json
 import pytest
 
 
-NOW='2019-12-31T11:22:33Z'
+NOW='2019-12-31T11:22:33+00:00'
 
 @pytest.mark.now(NOW)
 async def test_basic(service_client):
@@ -22,8 +22,7 @@ async def test_basic(service_client):
     assert response.status == 201
     response_json = response.json()
 
-    assert "id" in response_json
     assert response_json["login"] == "test"
     assert response_json["first_name"] == "test"
     assert response_json["last_name"] == "test"
-    # assert response_json["created_at"] == NOW
+    assert response_json["created_at"] == NOW

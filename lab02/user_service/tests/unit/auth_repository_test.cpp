@@ -10,7 +10,7 @@
 
 #include "auth/auth_repository.hpp"
 
-using namespace auth;
+using namespace Auth;
 
 /**
  * @brief Unit tests for InMemoryAuthRepository
@@ -28,30 +28,41 @@ UTEST(InMemoryAuthRepository, EmptyRepository_CheckUser_ReturnsFalse) {
 UTEST(InMemoryAuthRepository, AddUser_CheckUser_ReturnsTrue) {
     InMemoryAuthRepository repository;
     
-    EXPECT_TRUE(repository.AddUser("testuser", "testpass"));
+    auto result = repository.AddUser("testuser", "testpass");
+    EXPECT_TRUE(std::holds_alternative<Models::User>(result));
     EXPECT_TRUE(repository.CheckUser("testuser", "testpass"));
 }
 
 UTEST(InMemoryAuthRepository, AddUser_WrongPassword_ReturnsFalse) {
     InMemoryAuthRepository repository;
     
-    EXPECT_TRUE(repository.AddUser("testuser", "testpass"));
+    auto result = repository.AddUser("testuser", "testpass");
+    EXPECT_TRUE(std::holds_alternative<Models::User>(result));
     EXPECT_FALSE(repository.CheckUser("testuser", "wrongpass"));
 }
 
-UTEST(InMemoryAuthRepository, AddUser_DuplicateUser_ReturnsFalse) {
+UTEST(InMemoryAuthRepository, AddUser_DuplicateUser_ReturnsError) {
     InMemoryAuthRepository repository;
     
-    EXPECT_TRUE(repository.AddUser("testuser", "testpass"));
-    EXPECT_FALSE(repository.AddUser("testuser", "anotherpass"));
+    auto result1 = repository.AddUser("testuser", "testpass");
+    EXPECT_TRUE(std::holds_alternative<Models::User>(result1));
+    
+    auto result2 = repository.AddUser("testuser", "anotherpass");
+    EXPECT_TRUE(std::holds_alternative<AddUserError>(result2));
+    EXPECT_EQ(std::get<AddUserError>(result2), AddUserError::UserAlreadyExists);
 }
 
 UTEST(InMemoryAuthRepository, AddUser_MultipleUsers_AllAccessible) {
     InMemoryAuthRepository repository;
     
-    EXPECT_TRUE(repository.AddUser("user1", "pass1"));
-    EXPECT_TRUE(repository.AddUser("user2", "pass2"));
-    EXPECT_TRUE(repository.AddUser("user3", "pass3"));
+    auto result1 = repository.AddUser("user1", "pass1");
+    EXPECT_TRUE(std::holds_alternative<Models::User>(result1));
+    
+    auto result2 = repository.AddUser("user2", "pass2");
+    EXPECT_TRUE(std::holds_alternative<Models::User>(result2));
+    
+    auto result3 = repository.AddUser("user3", "pass3");
+    EXPECT_TRUE(std::holds_alternative<Models::User>(result3));
     
     EXPECT_TRUE(repository.CheckUser("user1", "pass1"));
     EXPECT_TRUE(repository.CheckUser("user2", "pass2"));
@@ -105,4 +116,3 @@ UTEST(InMemoryAuthRepository, ConcurrentAddUsers_ThreadSafe) {
         EXPECT_TRUE(repository.CheckUser(nick, pass)) << "Failed for " << nick;
     }
 }
-

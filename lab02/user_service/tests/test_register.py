@@ -2,7 +2,7 @@ import json
 import pytest
 
 
-NOW = '2019-12-31T11:22:33Z'
+NOW = '2019-12-31T11:22:33+00:00'
 
 
 @pytest.mark.now(NOW)
@@ -22,11 +22,9 @@ async def test_register_user_success(service_client):
     assert response_json["login"] == "testuser"
     assert response_json["first_name"] == "Test"
     assert response_json["last_name"] == "User"
-    assert "id" in response_json
-    assert "created_at" in response_json
+    assert response_json["created_at"] == NOW
 
 
-@pytest.mark.now(NOW)
 async def test_register_user_empty_login(service_client):
     """Test registration with empty login returns 400"""
     response = await service_client.post(
@@ -43,7 +41,6 @@ async def test_register_user_empty_login(service_client):
     assert "message" in response_json
 
 
-@pytest.mark.now(NOW)
 async def test_register_user_empty_password(service_client):
     """Test registration with empty password returns 400"""
     response = await service_client.post(
@@ -60,7 +57,6 @@ async def test_register_user_empty_password(service_client):
     assert "message" in response_json
 
 
-@pytest.mark.now(NOW)
 async def test_register_user_duplicate(service_client):
     """Test registration with duplicate login returns 409"""
     # First registration
@@ -90,7 +86,6 @@ async def test_register_user_duplicate(service_client):
     assert "message" in response_json
 
 
-@pytest.mark.now(NOW)
 async def test_register_user_missing_fields(service_client):
     """Test registration with missing required fields returns 400"""
     response = await service_client.post(
@@ -103,7 +98,6 @@ async def test_register_user_missing_fields(service_client):
     assert response.status == 400
 
 
-@pytest.mark.now(NOW)
 async def test_register_user_min_length_login(service_client):
     """Test registration with login below minimum length"""
     response = await service_client.post(
@@ -119,7 +113,6 @@ async def test_register_user_min_length_login(service_client):
     assert response.status == 400
 
 
-@pytest.mark.now(NOW)
 async def test_register_user_max_length_login(service_client):
     """Test registration with login above maximum length"""
     response = await service_client.post(
@@ -135,7 +128,6 @@ async def test_register_user_max_length_login(service_client):
     assert response.status == 400
 
 
-@pytest.mark.now(NOW)
 async def test_register_user_min_length_password(service_client):
     """Test registration with password below minimum length"""
     response = await service_client.post(

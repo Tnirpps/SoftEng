@@ -53,5 +53,5 @@ components_manager:
 
         auth-repository:
             initial-users:
-                - nick: admin
+                - login: admin
                   pass: secret

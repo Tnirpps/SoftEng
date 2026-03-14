@@ -13,4 +13,7 @@ IncludeCategories:
     Priority: 2
 BreakConstructorInitializersBeforeComma: true
 BreakConstructorInitializers: BeforeColon
+AllowShortFunctionsOnASingleLine: None
+BreakBeforeBinaryOperators: None
+PenaltyBreakAssignment: 100 
 ...

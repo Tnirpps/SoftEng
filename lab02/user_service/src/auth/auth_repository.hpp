@@ -2,13 +2,32 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <userver/components/component_base.hpp>
 #include <userver/components/component_config.hpp>
 #include <userver/components/component_context.hpp>
 #include <userver/concurrent/variable.hpp>
+#include <variant>
 
-namespace auth {
+#include "models/user.hpp"
+
+namespace Auth {
+
+/**
+ * @brief Error types for AddUser operation
+ */
+enum class AddUserError {
+    UserAlreadyExists, // Клиентская ошибка (409 Conflict)
+    ServerError        // Серверная ошибка (500 Internal Server Error)
+};
+
+/**
+ * @brief Result type for AddUser operation
+ * Uses std::variant to represent either success (User) or error (AddUserError)
+ */
+using AddUserResult = std::variant<Models::User, AddUserError>;
+using CheckUserResult = std::optional<Models::User>;
 
 /**
  * @brief Abstract interface for authentication repository
@@ -23,19 +42,19 @@ class IAuthRepository {
 
     /**
      * @brief Check if user credentials are valid
-     * @param nick User nickname/login
+     * @param login User loginname/login
      * @param password User password
      * @return true if credentials are valid, false otherwise
      */
-    virtual bool CheckUser(const std::string &nick, const std::string &password) = 0;
+    virtual CheckUserResult CheckUser(const std::string &login, const std::string &password) = 0;
 
     /**
      * @brief Add a new user to the repository
-     * @param nick User nickname/login
+     * @param login User loginname/login
      * @param password User password (should be hashed in production)
-     * @return true if user was added successfully, false if user already exists
+     * @return AddUserResult - User on success, AddUserError on failure
      */
-    virtual bool AddUser(const std::string &nick, const std::string &password) = 0;
+    virtual AddUserResult AddUser(const std::string &login, const std::string &password) = 0;
 };
 
 /**
@@ -50,12 +69,12 @@ class InMemoryAuthRepository : public IAuthRepository {
 
     /**
      * @brief Initialize repository with pre-configured users
-     * @param initial_users Map of nick -> password pairs
+     * @param initial_users Map of login -> password pairs
      */
     explicit InMemoryAuthRepository(const std::map<std::string, std::string> &initial_users);
 
-    bool CheckUser(const std::string &nick, const std::string &password) override;
-    bool AddUser(const std::string &nick, const std::string &password) override;
+    CheckUserResult CheckUser(const std::string &login, const std::string &password) override;
+    AddUserResult AddUser(const std::string &login, const std::string &password) override;
 
   private:
     userver::concurrent::Variable<std::map<std::string, std::string>> users_;
@@ -86,4 +105,4 @@ class AuthComponent : public userver::components::ComponentBase {
     std::shared_ptr<InMemoryAuthRepository> repository_;
 };
 
-} // namespace auth
+} // namespace Auth

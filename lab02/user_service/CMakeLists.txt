@@ -30,8 +30,11 @@ target_link_libraries(
     PUBLIC userver::core userver::s3api
 )
 
-# find_package(jwt-cpp REQUIRED)
-# target_link_libraries(${PROJECT_NAME}_objs PUBLIC jwt-cpp::jwt-cpp)
+find_package(nlohmann_json REQUIRED)
+target_link_libraries(${PROJECT_NAME}_objs PUBLIC nlohmann_json::nlohmann_json)
+
+find_package(jwt-cpp REQUIRED)
+target_link_libraries(${PROJECT_NAME}_objs PUBLIC jwt-cpp::jwt-cpp)
 
 # code gen
 file(GLOB_RECURSE SCHEMAS ${CMAKE_CURRENT_SOURCE_DIR}/schemas/*.yaml)
