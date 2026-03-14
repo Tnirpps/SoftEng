@@ -3,6 +3,8 @@
 #include <exception>
 #include <string>
 #include <userver/formats/json/value.hpp>
+#include <userver/formats/json/value_builder.hpp>
+#include <userver/server/handlers/http_handler_base.hpp>
 #include <userver/server/handlers/http_handler_json_base.hpp>
 #include <userver/server/http/http_request.hpp>
 #include <userver/server/http/http_status.hpp>
@@ -65,7 +67,51 @@ Gen::openapi::ErrorResponse Error501(const std::string &message, const userver::
 Gen::openapi::ErrorResponse Error503(const std::string &message, const userver::formats::json::Value &extra = {});
 
 /**
- * @brief CRTP-based base handler for typed JSON request/response processing
+ * @brief CRTP-based base handler for requests WITHOUT body (GET, DELETE, HEAD, etc.)
+ *
+ * @tparam ResponseType Type of the response object
+ * @tparam SuccessStatus HTTP status code for successful response
+ */
+template <typename ResponseType,
+          userver::server::http::HttpStatus SuccessStatus = userver::server::http::HttpStatus::kOk>
+class TypedHandler : public userver::server::handlers::HttpHandlerBase {
+
+  public:
+    using ResponseVariant = std::variant<ResponseType, Gen::openapi::ErrorResponse>;
+    using Response = ResponseType;
+
+    // Forward constructors to base class
+    using HttpHandlerBase::HttpHandlerBase;
+
+    std::string HandleRequestThrow(const userver::server::http::HttpRequest &request,
+                                   userver::server::request::RequestContext &context) const override {
+        ResponseVariant result = HandleTypedRequest(request, context);
+
+        return userver::utils::Visit(
+            std::move(result),
+            [&request](ResponseType response) {
+                request.SetResponseStatus(SuccessStatus);
+                return userver::formats::json::ToString(userver::formats::json::ValueBuilder{response}.ExtractValue());
+            },
+            [&request](Gen::openapi::ErrorResponse error) {
+                request.SetResponseStatus(static_cast<userver::server::http::HttpStatus>(error.status));
+                return userver::formats::json::ToString(userver::formats::json::ValueBuilder{error}.ExtractValue());
+            });
+    }
+
+  protected:
+    virtual ResponseVariant HandleTypedRequest(const userver::server::http::HttpRequest &request,
+                                               userver::server::request::RequestContext &context) const = 0;
+
+    virtual ~TypedHandler() = default;
+};
+
+/**
+ * @brief CRTP-based base handler for typed JSON request/response processing (POST, PUT, PATCH, etc.)
+ *
+ * @tparam RequestType Type of the request object (parsed from JSON body)
+ * @tparam ResponseType Type of the response object
+ * @tparam SuccessStatus HTTP status code for successful response
  */
 template <typename RequestType, typename ResponseType,
           userver::server::http::HttpStatus SuccessStatus = userver::server::http::HttpStatus::kOk>

@@ -74,6 +74,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /users/search:
+    get:
+      summary: Поиск пользователя по маске ника
+      operationId: searchUser
+      parameters:
+        - name: pattern
+          in: query
+          required: true
+          description: Маска ника для поиска (поддерживает % и _)
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 20
+      responses:
+        '200':
+          description: Результат поиска
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSearchResponse'
+        '400':
+          description: Некорректные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
     Login:
@@ -154,6 +187,16 @@ components:
           type: string
           description: JWT токен
     
+    UserSearchResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - found
+      properties:
+        found:
+          type: boolean
+          description: true если найден хотя бы один пользователь с подходящей маской
+
     ErrorResponse:
       type: object
       additionalProperties: true

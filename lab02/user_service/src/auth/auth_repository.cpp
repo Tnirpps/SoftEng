@@ -2,8 +2,12 @@
 
 #include <memory>
 #include <optional>
+#include <regex>
 #include <userver/components/component_context.hpp>
 #include <userver/logging/log.hpp>
+#include <userver/testsuite/tasks.hpp>
+#include <userver/testsuite/testpoint.hpp>
+#include <userver/testsuite/testsuite_support.hpp>
 #include <userver/yaml_config/merge_schemas.hpp>
 #include <userver/yaml_config/schema.hpp>
 
@@ -47,6 +51,38 @@ AddUserResult InMemoryAuthRepository::AddUser(const std::string &login, const st
     }
 }
 
+bool InMemoryAuthRepository::SearchUserByPattern(const std::string &pattern) {
+    auto data_ptr = users_.Lock();
+
+    // Simple pattern matching: % matches any sequence, _ matches single char
+    // Convert SQL-like pattern to regex
+    std::string regex_pattern = "^";
+    for (char c : pattern) {
+        if (c == '%') {
+            regex_pattern += ".*";
+        } else if (c == '_') {
+            regex_pattern += ".";
+        } else {
+            regex_pattern += std::regex_replace(std::string(1, c), std::regex(R"([\^$.|?*+(){}\\])"), R"(\$&)");
+        }
+    }
+    regex_pattern += "$";
+
+    std::regex re(regex_pattern, std::regex::icase);
+
+    for (const auto &[login, _] : *data_ptr) {
+        if (std::regex_match(login, re)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void InMemoryAuthRepository::DeleteAllUsers() {
+    auto data_ptr = users_.Lock();
+    data_ptr->clear();
+}
+
 // ==================== AuthComponent ====================
 
 AuthComponent::AuthComponent(const userver::components::ComponentConfig &config,
@@ -62,6 +98,13 @@ AuthComponent::AuthComponent(const userver::components::ComponentConfig &config,
             repository_->AddUser(login, pass);
         }
     }
+
+    // 1. Находим компонент поддержки тестов
+    auto &testsuite_support = context.FindComponent<userver::components::TestsuiteSupport>();
+    auto &tasks = testsuite_support.GetTestsuiteTasks();
+    tasks.RegisterTask("delete-all-users", [repository = this->repository_]() {
+        repository->DeleteAllUsers();
+    });
 
     LOG_INFO() << "AuthComponent initialized";
 }

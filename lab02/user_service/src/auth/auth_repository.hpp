@@ -55,6 +55,18 @@ class IAuthRepository {
      * @return AddUserResult - User on success, AddUserError on failure
      */
     virtual AddUserResult AddUser(const std::string &login, const std::string &password) = 0;
+
+    /**
+     * @brief Search for users by login pattern (SQL-like LIKE)
+     * @param pattern Login pattern (supports % and _ wildcards)
+     * @return true if at least one user matches the pattern
+     */
+    virtual bool SearchUserByPattern(const std::string &pattern) = 0;
+
+    /**
+     * @brief Delete all users from the repository
+     */
+    virtual void DeleteAllUsers() = 0;
 };
 
 /**
@@ -75,6 +87,8 @@ class InMemoryAuthRepository : public IAuthRepository {
 
     CheckUserResult CheckUser(const std::string &login, const std::string &password) override;
     AddUserResult AddUser(const std::string &login, const std::string &password) override;
+    bool SearchUserByPattern(const std::string &pattern) override;
+    void DeleteAllUsers() override;
 
   private:
     userver::concurrent::Variable<std::map<std::string, std::string>> users_;

@@ -4,8 +4,6 @@ import pytest
 
 NOW = '2019-12-31T11:22:33+00:00'
 
-# TODO: issue that sudh user is existing because of previous test
-@pytest.mark.skip(reason="user is already existing or not, need to fix")
 @pytest.mark.now(NOW)
 async def test_login_success(service_client):
     """Test successful user login"""

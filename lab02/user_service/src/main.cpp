@@ -12,6 +12,7 @@
 #include "auth/auth_repository.hpp"
 #include "handlers/login/handler.hpp"
 #include "handlers/register/handler.hpp"
+#include "handlers/search/handler.hpp"
 
 int main(int argc, char *argv[]) {
     auto component_list = userver::components::MinimalServerComponentList()
@@ -22,6 +23,7 @@ int main(int argc, char *argv[]) {
                               .Append<userver::server::handlers::TestsControl>()
                               .Append<Handlers::RegisterHandler>()
                               .Append<Handlers::LoginHandler>()
+                              .Append<Handlers::SearchHandler>()
                               .Append<Auth::AuthComponent>();
 
     return userver::utils::DaemonMain(argc, argv, component_list);
