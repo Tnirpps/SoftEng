@@ -20,11 +20,6 @@ components_manager:
                     overflow_behavior: discard
         dynamic-config: {}
         testsuite-support: {}
-        tests-control:
-            path: /tests/control
-            method: POST
-            task_processor: main-task-processor
-            testsuite-tasks-enabled: $is-testing
 
         http-client:
         http-client-core:

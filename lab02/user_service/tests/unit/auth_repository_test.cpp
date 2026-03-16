@@ -6,27 +6,21 @@
 #include <userver/engine/async.hpp>
 #include <userver/engine/sleep.hpp>
 #include <vector>
-#include <vector>
 
 #include "auth/auth_repository.hpp"
+#include "auth/repositories/in_memory_auth_repository.hpp"
 
 using namespace Auth;
-
-/**
- * @brief Unit tests for InMemoryAuthRepository
- * 
- * These tests verify the thread-safe in-memory authentication repository
- * without requiring full component infrastructure.
- */
+using namespace Auth::Repositories;
 
 UTEST(InMemoryAuthRepository, EmptyRepository_CheckUser_ReturnsFalse) {
-    InMemoryAuthRepository repository;
+    Repositories::InMemoryAuthRepository repository;
     
     EXPECT_FALSE(repository.CheckUser("nonexistent", "password"));
 }
 
 UTEST(InMemoryAuthRepository, AddUser_CheckUser_ReturnsTrue) {
-    InMemoryAuthRepository repository;
+    Repositories::InMemoryAuthRepository repository;
     
     auto result = repository.AddUser("testuser", "testpass");
     EXPECT_TRUE(std::holds_alternative<Models::User>(result));
@@ -34,7 +28,7 @@ UTEST(InMemoryAuthRepository, AddUser_CheckUser_ReturnsTrue) {
 }
 
 UTEST(InMemoryAuthRepository, AddUser_WrongPassword_ReturnsFalse) {
-    InMemoryAuthRepository repository;
+    Repositories::InMemoryAuthRepository repository;
     
     auto result = repository.AddUser("testuser", "testpass");
     EXPECT_TRUE(std::holds_alternative<Models::User>(result));
@@ -42,7 +36,7 @@ UTEST(InMemoryAuthRepository, AddUser_WrongPassword_ReturnsFalse) {
 }
 
 UTEST(InMemoryAuthRepository, AddUser_DuplicateUser_ReturnsError) {
-    InMemoryAuthRepository repository;
+    Repositories::InMemoryAuthRepository repository;
     
     auto result1 = repository.AddUser("testuser", "testpass");
     EXPECT_TRUE(std::holds_alternative<Models::User>(result1));
@@ -53,7 +47,7 @@ UTEST(InMemoryAuthRepository, AddUser_DuplicateUser_ReturnsError) {
 }
 
 UTEST(InMemoryAuthRepository, AddUser_MultipleUsers_AllAccessible) {
-    InMemoryAuthRepository repository;
+    Repositories::InMemoryAuthRepository repository;
     
     auto result1 = repository.AddUser("user1", "pass1");
     EXPECT_TRUE(std::holds_alternative<Models::User>(result1));
@@ -78,25 +72,20 @@ UTEST(InMemoryAuthRepository, ConstructorWithInitialUsers) {
         {"guest", "guestpass"}
     };
     
-    InMemoryAuthRepository repository(initial_users);
+    Repositories::InMemoryAuthRepository repository(initial_users);
     
     EXPECT_TRUE(repository.CheckUser("admin", "adminpass"));
     EXPECT_TRUE(repository.CheckUser("guest", "guestpass"));
     EXPECT_FALSE(repository.CheckUser("admin", "guestpass"));
 }
 
-/**
- * @brief Test thread-safety of concurrent AddUser operations
- */
 UTEST(InMemoryAuthRepository, ConcurrentAddUsers_ThreadSafe) {
-    InMemoryAuthRepository repository;
+    Repositories::InMemoryAuthRepository repository;
     const int num_threads = 10;
     std::vector<userver::engine::TaskWithResult<void>> tasks;
     tasks.reserve(num_threads);
 
-    // Внутри UTEST мы уже находимся в контексте движка userver (coroutine environment)
     for (int i = 0; i < num_threads; ++i) {
-        // Используем engine::Async для запуска корутин
         tasks.push_back(userver::engine::AsyncNoSpan([&repository, i] {
             std::string nick = "user" + std::to_string(i);
             std::string pass = "pass" + std::to_string(i);
@@ -104,12 +93,10 @@ UTEST(InMemoryAuthRepository, ConcurrentAddUsers_ThreadSafe) {
         }));
     }
 
-    // Ждем завершения всех задач и пробрасываем исключения, если они были
     for (auto& task : tasks) {
-        task.Get(); 
+        task.Get();
     }
 
-    // Проверяем результат
     for (int i = 0; i < num_threads; ++i) {
         std::string nick = "user" + std::to_string(i);
         std::string pass = "pass" + std::to_string(i);
