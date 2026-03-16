@@ -6,6 +6,7 @@
 #include <userver/server/http/http_status.hpp>
 
 #include "auth/auth_repository.hpp"
+#include "auth/jwt_credentials.hpp"
 #include "handlers/base_handler.hpp"
 #include "schemas/openapi.hpp"
 
@@ -31,6 +32,7 @@ class LoginHandler final
 
   private:
     std::shared_ptr<Auth::IAuthRepository> auth_repository_;
+    const Auth::JwtCredentials &jwt_credentials_;
 };
 
 } // namespace Handlers

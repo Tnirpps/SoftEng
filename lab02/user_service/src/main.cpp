@@ -10,9 +10,12 @@
 #include <userver/utils/daemon_run.hpp>
 
 #include "auth/auth_repository.hpp"
+#include "auth/jwt_credentials.hpp"
 #include "handlers/login/handler.hpp"
 #include "handlers/register/handler.hpp"
 #include "handlers/search/handler.hpp"
+#include "middlewares/auth_middleware.hpp"
+#include "middlewares/protected_handler_pipeline_builder.hpp"
 
 int main(int argc, char *argv[]) {
     auto component_list = userver::components::MinimalServerComponentList()
@@ -24,7 +27,10 @@ int main(int argc, char *argv[]) {
                               .Append<Handlers::RegisterHandler>()
                               .Append<Handlers::LoginHandler>()
                               .Append<Handlers::SearchHandler>()
-                              .Append<Auth::AuthComponent>();
+                              .Append<Auth::AuthComponent>()
+                              .Append<Auth::JwtCredentials>()
+                              .Append<Middlewares::AuthMiddlewareFactory>()
+                              .Append<Middlewares::ProtectedHandlerPipelineBuilder>();
 
     return userver::utils::DaemonMain(argc, argv, component_list);
 }

@@ -61,8 +61,20 @@ components_manager:
             path: /v1/users/search
             method: GET,OPTIONS
             task_processor: main-task-processor
+            middlewares:
+                pipeline-builder: protected-handler-pipeline-builder
 
         auth-repository:
             initial-users:
                 - login: admin
                   pass: secret
+
+        jwt-credentials:
+            # Store secret in configs instead of env
+            # just for the sake of simplicity
+            secret: super-secret-jwt-key
+            issuer: user-service
+
+        auth-middleware: {}
+
+        protected-handler-pipeline-builder: {}

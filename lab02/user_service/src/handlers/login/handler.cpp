@@ -8,6 +8,7 @@
 #include <jwt-cpp/traits/nlohmann-json/traits.h>
 
 #include "auth/auth_repository.hpp"
+#include "auth/jwt_credentials.hpp"
 #include "handlers/base_handler.hpp"
 #include "models/user.hpp"
 
@@ -16,7 +17,8 @@ namespace Handlers {
 LoginHandler::LoginHandler(const userver::components::ComponentConfig &config,
                            const userver::components::ComponentContext &context)
     : TypedJsonHandler(config, context)
-    , auth_repository_(context.FindComponent<Auth::AuthComponent>().GetRepository()) {
+    , auth_repository_(context.FindComponent<Auth::AuthComponent>().GetRepository())
+    , jwt_credentials_(context.FindComponent<Auth::JwtCredentials>()) {
 }
 
 LoginHandler::ResponseVariant
@@ -35,14 +37,13 @@ LoginHandler::HandleTypedRequest(const userver::server::http::HttpRequest & /*re
     const auto now = userver::utils::datetime::Now();
     const auto exp = now + std::chrono::hours(24);
 
-    // Пример использования jwt-cpp
     auto token = jwt::create<jwt::traits::nlohmann_json>()
-                     .set_issuer("madisk")
+                     .set_issuer(jwt_credentials_.GetIssuer())
                      .set_type("JWT")
                      .set_subject(user.login)
                      .set_issued_at(now)
                      .set_expires_at(exp)
-                     .sign(jwt::algorithm::hs256{"your-secret-key"});
+                     .sign(jwt::algorithm::hs256{jwt_credentials_.GetSecret()});
 
     LOG_INFO() << "[ABOBA] Geberated token: " << token;
 
