@@ -1,0 +1,567 @@
+openapi: 3.0.3
+info:
+  title: MaDisk Directory API
+  version: 1.0.0
+  description: REST API для сервиса управления папками и файлами пользователей
+
+servers:
+  - url: /v1
+
+paths:
+  /directories:
+    post:
+      summary: Создать новую директорию
+      operationId: createDirectory
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DirectoryCreateRequest'
+      responses:
+        '201':
+          description: Директория успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Directory'
+        '400':
+          description: Некорректные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Директория с таким именем уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: Получить список директорий пользователя
+      operationId: listDirectories
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: parent_id
+          in: query
+          required: false
+          description: ID родительской директории (если не указан, возвращает корневые директории)
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          description: Максимальное количество результатов
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          required: false
+          description: Смещение для пагинации
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Список директорий
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectoryListResponse'
+        '400':
+          description: Некорректные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /directories/{directory_id}:
+    get:
+      summary: Получить информацию о директории
+      operationId: getDirectory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: directory_id
+          in: path
+          required: true
+          description: UUID директории
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Информация о директории
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Directory'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Директория не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Обновить информацию о директории
+      operationId: updateDirectory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: directory_id
+          in: path
+          required: true
+          description: UUID директории
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DirectoryUpdateRequest'
+      responses:
+        '200':
+          description: Директория успешно обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Directory'
+        '400':
+          description: Некорректные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Директория не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Директория с таким именем уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Удалить директорию
+      operationId: deleteDirectory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: directory_id
+          in: path
+          required: true
+          description: UUID директории
+          schema:
+            type: string
+            format: uuid
+        - name: recursive
+          in: query
+          required: false
+          description: Удалять ли содержимое директории (true/false)
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '204':
+          description: Директория успешно удалена
+        '400':
+          description: Директория не пуста (при recursive=false)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Директория не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /directories/{directory_id}/move:
+    post:
+      summary: Переместить директорию в другую директорию
+      operationId: moveDirectory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: directory_id
+          in: path
+          required: true
+          description: UUID перемещаемой директории
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DirectoryMoveRequest'
+      responses:
+        '200':
+          description: Директория успешно перемещена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Directory'
+        '400':
+          description: Некорректные данные (например, попытка переместить в себя или в потомка)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Директория не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Конфликт имён в целевой директории
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /directories/{directory_id}/files:
+    get:
+      summary: Получить список файлов в директории
+      operationId: listFilesInDirectory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: directory_id
+          in: path
+          required: true
+          description: UUID директории
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          description: Максимальное количество результатов
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          required: false
+          description: Смещение для пагинации
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Список файлов в директории
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileListResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Директория не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT токен аутентификации
+
+  schemas:
+    DirectoryName:
+      type: string
+      description: Имя директории
+      minLength: 1
+      maxLength: 255
+
+    DirectoryCreateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          $ref: '#/components/schemas/DirectoryName'
+        parent_id:
+          type: string
+          format: uuid
+          description: ID родительской директории (необязательно, если не указано - создаётся в корне)
+
+    DirectoryUpdateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          $ref: '#/components/schemas/DirectoryName'
+
+    DirectoryMoveRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - new_parent_id
+      properties:
+        new_parent_id:
+          type: string
+          format: uuid
+          description: ID новой родительской директории (null для перемещения в корень)
+
+    Directory:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - parent_id
+        - owner_id
+        - created_at
+        - updated_at
+        - is_root
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Уникальный идентификатор директории
+        name:
+          type: string
+          description: Имя директории
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID родительской директории (null для корневых директорий)
+        owner_id:
+          type: string
+          format: uuid
+          description: ID владельца директории
+        created_at:
+          type: string
+          format: date-time
+          description: Дата и время создания директории
+        updated_at:
+          type: string
+          format: date-time
+          description: Дата и время последнего обновления директории
+        is_root:
+          type: boolean
+          description: true если директория является корневой
+
+    DirectoryListResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - total
+        - limit
+        - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Directory'
+        total:
+          type: integer
+          description: Общее количество элементов
+        limit:
+          type: integer
+          description: Запрошенный лимит
+        offset:
+          type: integer
+          description: Запрошенное смещение
+
+    FileMetadata:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - size
+        - mime_type
+        - directory_id
+        - owner_id
+        - created_at
+        - updated_at
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Уникальный идентификатор файла
+        name:
+          type: string
+          description: Имя файла
+        size:
+          type: integer
+          description: Размер файла в байтах
+        mime_type:
+          type: string
+          description: MIME-тип файла
+        directory_id:
+          type: string
+          format: uuid
+          description: ID директории, в которой находится файл
+        owner_id:
+          type: string
+          format: uuid
+          description: ID владельца файла
+        created_at:
+          type: string
+          format: date-time
+          description: Дата и время создания файла
+        updated_at:
+          type: string
+          format: date-time
+          description: Дата и время последнего обновления файла
+        status:
+          type: string
+          enum:
+            - pending
+            - scanning
+            - available
+            - infected
+          description: Статус файла (проверка на вирусы)
+
+    FileListResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - total
+        - limit
+        - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileMetadata'
+        total:
+          type: integer
+          description: Общее количество элементов
+        limit:
+          type: integer
+          description: Запрошенный лимит
+        offset:
+          type: integer
+          description: Запрошенное смещение
+
+    ErrorResponse:
+      type: object
+      additionalProperties: true
+      required:
+        - message
+        - status
+      properties:
+        message:
+          type: string
+        status:
+          type: integer

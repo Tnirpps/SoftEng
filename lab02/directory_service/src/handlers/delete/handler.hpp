@@ -1,0 +1,28 @@
+#pragma once
+
+#include <userver/components/component_context.hpp>
+#include <userver/server/handlers/http_handler_base.hpp>
+#include <userver/server/http/http_status.hpp>
+
+#include "handlers/base_handler.hpp"
+#include "schemas/openapi.hpp"
+
+namespace Handlers {
+
+class DeleteHandler final
+    : public Handlers::TypedHandler<
+          userver::formats::json::Value,
+          userver::server::http::HttpStatus::kNoContent> {
+  public:
+    static constexpr std::string_view kName = "handler-directory-delete";
+
+    using Response = TypedHandler::Response;
+
+    DeleteHandler(const userver::components::ComponentConfig &config,
+                  const userver::components::ComponentContext &context);
+
+    ResponseVariant HandleTypedRequest(const userver::server::http::HttpRequest &request,
+                                       userver::server::request::RequestContext &context) const override;
+};
+
+} // namespace Handlers
