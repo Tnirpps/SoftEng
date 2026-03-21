@@ -1,8 +1,5 @@
 #include "handler.hpp"
 
-#include <__expected/expected.h>
-
-
 namespace Handlers {
 
 CreateHandler::CreateHandler(const userver::components::ComponentConfig &config,
