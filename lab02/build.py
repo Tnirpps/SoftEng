@@ -1,13 +1,16 @@
 """
 Build script for the whole MaDisk monorepo.
 Usage:
-    python build.py bootstrap   - Install dependencies with Conan
-    python build.py configure   - Configure CMake build directory
-    python build.py build       - Build everything
-    python build.py test        - Run all unit tests (if built)
-    python build.py lint        - Run clang-format on all source files
+    python build.py bootstrap       - Install dependencies with Conan
+    python build.py configure       - Configure CMake build directory
+    python build.py build           - Build everything
+    python build.py test            - Run all unit tests (if built)
+    python build.py lint            - Run clang-format on all source files
+    python build.py docker-build    - Build Docker images for all services
+    python build.py docker-up       - Start all services with docker-compose
+    python build.py docker-down     - Stop all services
     python build.py start <service> - Run a selected service (user_service or directory_service)
-    python build.py all         - bootstrap + configure + build
+    python build.py all             - bootstrap + configure + build
 """
 import subprocess
 import sys
@@ -104,6 +107,12 @@ def main():
     elif cmd == "lint":
         success = lint()
         sys.exit(0 if success else 1)
+    elif cmd == "docker-build":
+        run(["docker-compose", "build"], "Building Docker images")
+    elif cmd == "docker-up":
+        run(["docker-compose", "up", "-d"], "Starting all services")
+    elif cmd == "docker-down":
+        run(["docker-compose", "down"], "Stopping all services")
     elif cmd == "start" and len(sys.argv) >= 3:
         start_service(sys.argv[2])
     elif cmd == "all":

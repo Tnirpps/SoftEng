@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  user_service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: madisk_user_service
+    command: ["./user_service/bin/user_service", "-c", "./user_service/configs/static_config.yaml", "--config_vars", "./user_service/configs/config_vars.testing.yaml"]
+    ports:
+      - "8081:8080"
+    environment:
+      - SERVER_PORT=8080
+      - WORKER_THREADS=4
+      - WORKER_FS_THREADS=2
+      - LOGGER_LEVEL=info
+      - IS_TESTING=false
+    volumes:
+      - ./user_service/configs:/app/user_service/configs:ro
+    networks:
+      - madisk_network
+    restart: unless-stopped
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  directory_service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: madisk_directory_service
+    command: ["./directory_service/bin/directory_service", "-c", "./directory_service/configs/static_config.yaml", "--config_vars", "./directory_service/configs/config_vars.testing.yaml"]
+    ports:
+      - "8082:8080"
+    environment:
+      - SERVER_PORT=8080
+      - WORKER_THREADS=4
+      - WORKER_FS_THREADS=2
+      - LOGGER_LEVEL=info
+      - IS_TESTING=false
+    volumes:
+      - ./directory_service/configs:/app/directory_service/configs:ro
+    networks:
+      - madisk_network
+    restart: unless-stopped
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    depends_on:
+      user_service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  madisk_network:
+    driver: bridge
