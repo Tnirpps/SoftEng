@@ -18,6 +18,7 @@
 #include "handlers/update/handler.hpp"
 #include "middlewares/auth_middleware.hpp"
 #include "middlewares/protected_handler_pipeline_builder.hpp"
+#include "repositories/directory_repository.hpp"
 
 int main(int argc, char *argv[]) {
     auto component_list = userver::components::MinimalServerComponentList()
@@ -33,6 +34,7 @@ int main(int argc, char *argv[]) {
                               .Append<Handlers::DeleteHandler>()
                               .Append<Handlers::MoveHandler>()
                               .Append<Handlers::FilesListHandler>()
+                              .Append<Repositories::DirectoryComponent>()
                               .Append<Auth::JwtCredentials>()
                               .Append<Middlewares::AuthMiddlewareFactory>()
                               .Append<Middlewares::ProtectedHandlerPipelineBuilder>();

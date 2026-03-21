@@ -91,11 +91,13 @@ components_manager:
             middlewares:
                 pipeline-builder: protected-handler-pipeline-builder
 
+        directory-repository: {}
+
         jwt-credentials:
             # Store secret in configs instead of env
             # just for the sake of simplicity
             secret: super-secret-jwt-key
-            issuer: directory-service
+            issuer: user-service
 
         auth-middleware: {}
 

@@ -7,11 +7,9 @@
 // #include <userver/engine/sleep.hpp>
 // #include <vector>
 
-
-
 // UTEST(InMemoryAuthRepository, AddUser_CheckUser_ReturnsTrue) {
 //     Repositories::InMemoryAuthRepository repository;
-    
+
 //     auto result = repository.AddUser("testuser", "testpass");
 //     EXPECT_TRUE(std::holds_alternative<Models::User>(result));
 //     EXPECT_TRUE(repository.CheckUser("testuser", "testpass"));
