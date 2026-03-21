@@ -1,39 +1,50 @@
 #include "in_memory_auth_repository.hpp"
 
 #include <regex>
+#include <userver/utils/boost_uuid4.hpp>
 #include <userver/utils/datetime.hpp>
+#include <userver/utils/uuid4.hpp>
 
 #include "models/user.hpp"
 
 namespace Auth::Repositories {
 
-InMemoryAuthRepository::InMemoryAuthRepository(const std::map<std::string, std::string> &initial_users)
-    : users_(initial_users) {
-}
-
 CheckUserResult InMemoryAuthRepository::CheckUser(const std::string &login, const std::string &password) {
     auto data_ptr = users_.Lock();
     auto it = data_ptr->find(login);
-    if (it == data_ptr->end() || it->second != password) {
+    if (it == data_ptr->end() || it->second.password != password) {
         return std::nullopt;
     }
+    const auto &user = it->second;
     return Models::User{
-        .login = login,
-        .first_name = "",
-        .last_name = "",
-        .created_at = userver::utils::datetime::TimePointTz{userver::utils::datetime::Now()}};
+        .uuid = user.uuid,
+        .login = user.login,
+        .first_name = user.first_name,
+        .last_name = user.last_name,
+        .created_at = user.created_at};
 }
 
-AddUserResult InMemoryAuthRepository::AddUser(const std::string &login, const std::string &password) {
+AddUserResult InMemoryAuthRepository::AddUser(const std::string &login, const std::string &password, const std::string &first_name, const std::string &last_name) {
+    User user{
+        .uuid = userver::utils::generators::GenerateUuid(),
+        .login = login,
+        .password = password,
+        .first_name = first_name,
+        .last_name = last_name,
+        .created_at = userver::utils::datetime::TimePointTz{userver::utils::datetime::Now()}};
+
     auto data_ptr = users_.Lock();
-    auto [it, inserted] = data_ptr->emplace(login, password);
+
+    auto [it, inserted] = data_ptr->emplace(login, user);
 
     if (inserted) {
+        const auto &user = it->second;
         return Models::User{
-            .login = login,
-            .first_name = "",
-            .last_name = "",
-            .created_at = userver::utils::datetime::TimePointTz{userver::utils::datetime::Now()}};
+            .uuid = user.uuid,
+            .login = user.login,
+            .first_name = user.first_name,
+            .last_name = user.last_name,
+            .created_at = user.created_at};
     } else {
         return AddUserError::UserAlreadyExists;
     }

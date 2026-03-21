@@ -24,7 +24,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/UserCreateResponse'
         '400':
           description: Некорректные данные
           content:
@@ -125,11 +125,15 @@ components:
       type: object
       additionalProperties: false
       required:
+        - uuid
         - login
         - first_name
         - last_name
         - created_at
       properties:
+        uuid:
+          type: string
+          format: uuid
         login:
           type: string
         first_name:

@@ -59,10 +59,7 @@ components_manager:
             middlewares:
                 pipeline-builder: protected-handler-pipeline-builder
 
-        auth-repository:
-            initial-users:
-                - login: admin
-                  pass: secret
+        auth-repository: {}
 
         jwt-credentials:
             # Store secret in configs instead of env

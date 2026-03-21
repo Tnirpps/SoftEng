@@ -26,7 +26,7 @@ class IAuthRepository {
     virtual ~IAuthRepository() = default;
 
     virtual CheckUserResult CheckUser(const std::string &login, const std::string &password) = 0;
-    virtual AddUserResult AddUser(const std::string &login, const std::string &password) = 0;
+    virtual AddUserResult AddUser(const std::string &login, const std::string &password, const std::string &first_name, const std::string &last_name) = 0;
     virtual bool SearchUserByPattern(const std::string &pattern) = 0;
     virtual void DeleteAllUsers() = 0;
 };

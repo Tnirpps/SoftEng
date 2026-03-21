@@ -1,6 +1,8 @@
 #include "auth_middleware.hpp"
 
 #include <userver/formats/json/inline.hpp>
+#include <userver/formats/json/serialize.hpp>
+#include <userver/formats/json/value.hpp>
 #include <userver/formats/json/value_builder.hpp>
 #include <userver/http/status_code.hpp>
 #include <userver/logging/log.hpp>
@@ -63,7 +65,13 @@ void AuthMiddleware::HandleRequest(userver::server::http::HttpRequest &request,
         verifier.verify(decoded_token);
         auto subject = decoded_token.get_subject();
         LOG_INFO() << "JWT verified for user: " << subject;
-        context.SetData("user_login", subject);
+        auto payload = userver::formats::json::FromString(decoded_token.get_payload());
+        if ((!payload.HasMember("login") || !payload["login"].IsString()) || (!payload.HasMember("uuid") || !payload["uuid"].IsString())) {
+            LOG_WARNING() << "Bad JWT payload for subject: " << subject;
+            MakeErrorResponse(request, Handlers::Error401("Invalid token"));
+            return;
+        }
+        context.SetUserData(payload);
     } catch (const jwt::error::token_verification_exception &e) {
         LOG_WARNING() << "Token verification failed: " << e.what();
         MakeErrorResponse(request, Handlers::Error401("Invalid token"));

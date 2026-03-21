@@ -41,6 +41,8 @@ LoginHandler::HandleTypedRequest(const userver::server::http::HttpRequest & /*re
                      .set_issuer(jwt_credentials_.GetIssuer())
                      .set_type("JWT")
                      .set_subject(user.login)
+                     .set_payload_claim("login", user.login)
+                     .set_payload_claim("uuid", user.uuid)
                      .set_issued_at(now)
                      .set_expires_at(exp)
                      .sign(jwt::algorithm::hs256{jwt_credentials_.GetSecret()});
