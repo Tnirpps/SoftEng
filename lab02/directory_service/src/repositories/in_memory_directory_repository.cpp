@@ -10,7 +10,7 @@ namespace Repositories {
 namespace {
 
 std::string GenerateUuid() {
-    return userver::utils::ToString(userver::utils::BoostUuidFromString(userver::utils::generators::GenerateUuid()));;
+    return userver::utils::ToString(userver::utils::BoostUuidFromString(userver::utils::generators::GenerateUuid()));
 }
 
 bool IsDescendant(const std::map<std::string, Models::Directory> &directories,
@@ -252,15 +252,15 @@ MoveDirectoryResult InMemoryDirectoryRepository::MoveDirectory(
         if (IsDescendant(*data_ptr, new_parent_id.value(), directory_id)) {
             return std::unexpected(MoveDirectoryError::WouldCreateCycle);
         }
+    }
 
-        // Check for name conflict in new parent
-        for (const auto &[id, dir] : *data_ptr) {
-            if (id != directory_id &&
-                dir.owner_id == owner_id &&
-                dir.name == it->second.name &&
-                dir.parent_id == new_parent_id) {
-                return std::unexpected(MoveDirectoryError::NameConflict);
-            }
+    // Check for name conflict in new parent (including root when new_parent_id is null)
+    for (const auto &[id, dir] : *data_ptr) {
+        if (id != directory_id &&
+            dir.owner_id == owner_id &&
+            dir.name == it->second.name &&
+            dir.parent_id == new_parent_id) {
+            return std::unexpected(MoveDirectoryError::NameConflict);
         }
     }
 

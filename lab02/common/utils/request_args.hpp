@@ -20,4 +20,11 @@ std::optional<bool> ParseBoolArg(std::string_view value);
  */
 bool GetBoolArg(std::string_view request_arg, bool default_value = false);
 
+/**
+ * @brief Parse an integer query argument from string
+ * @param value String value of the argument
+ * @return std::optional<int> Parsed integer value, or std::nullopt if parsing failed
+ */
+std::optional<int> ParseIntArg(std::string_view value);
+
 } // namespace Utils

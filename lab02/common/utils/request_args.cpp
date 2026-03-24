@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
+#include <string>
 
 namespace Utils {
 
@@ -33,6 +35,21 @@ bool GetBoolArg(std::string_view request_arg, bool default_value) {
 
     auto parsed = ParseBoolArg(request_arg);
     return parsed.value_or(default_value);
+}
+
+std::optional<int> ParseIntArg(std::string_view value) {
+    if (value.empty()) {
+        return std::nullopt;
+    }
+
+    int result = 0;
+    auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
+
+    if (ec == std::errc{} && ptr == value.data() + value.size()) {
+        return result;
+    }
+
+    return std::nullopt;
 }
 
 } // namespace Utils

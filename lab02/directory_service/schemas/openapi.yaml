@@ -422,8 +422,6 @@ components:
     DirectoryMoveRequest:
       type: object
       additionalProperties: false
-      required:
-        - new_parent_id
       properties:
         new_parent_id:
           type: string
