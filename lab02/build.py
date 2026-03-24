@@ -5,11 +5,12 @@ Usage:
     python build.py configure       - Configure CMake build directory
     python build.py build           - Build everything
     python build.py test            - Run all unit tests (if built)
+    python build.py ftest [pattern] - Run functional tests for all services
     python build.py lint            - Run clang-format on all source files
     python build.py docker-build    - Build Docker images for all services
     python build.py docker-up       - Start all services with docker-compose
     python build.py docker-down     - Stop all services
-    python build.py start <service> - Run a selected service (user_service or directory_service)
+    python build.py start <service> - Run a service (user_service or directory_service)
     python build.py all             - bootstrap + configure + build
 """
 import subprocess
@@ -42,6 +43,33 @@ def test():
     # поиск всех бинарников *_unittest
     for ut in BUILD_DIR.rglob("*_unittest"):
         run([str(ut)], f"Running tests: {ut.name}")
+
+def ftest(pattern=None):
+    """Run functional tests (pytest) for all services using runtests-* binaries."""
+    services = ["user_service", "directory_service"]
+    
+    for service in services:
+        service_build_dir = BUILD_DIR / service
+        if not service_build_dir.exists():
+            print(f"⚠️  Build directory not found for {service}")
+            continue
+        
+        # Find runtests-* binary
+        runtests_binary = None
+        for binary in service_build_dir.glob("runtests-*"):
+            runtests_binary = binary
+            break
+        
+        if not runtests_binary:
+            print(f"⚠️  No runtests binary found for {service}")
+            continue
+        
+        # Build command
+        cmd = [str(runtests_binary)]
+        if pattern:
+            cmd.extend(["-k", pattern])
+        
+        run(cmd, f"Running functional tests for {service}")
 
 def lint() -> bool:
     """Run clang-format on all C++ source files in the project."""
@@ -104,6 +132,9 @@ def main():
     elif cmd == "configure": configure()
     elif cmd == "build": build()
     elif cmd == "test": test()
+    elif cmd == "ftest":
+        pattern = sys.argv[2] if len(sys.argv) >= 3 else None
+        ftest(pattern)
     elif cmd == "lint":
         success = lint()
         sys.exit(0 if success else 1)
