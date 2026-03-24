@@ -20,6 +20,7 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).parent
 BUILD_DIR = ROOT_DIR / "build" / "Release"
+SERVICES =["user_service", "directory_service", "file_service"]
 
 def run(cmd, desc):
     print(f"\n==> {desc}\n{' '.join(map(str,cmd))}\n")
@@ -46,9 +47,7 @@ def test():
 
 def ftest(pattern=None):
     """Run functional tests (pytest) for all services using runtests-* binaries."""
-    services = ["user_service", "directory_service"]
-    
-    for service in services:
+    for service in SERVICES:
         service_build_dir = BUILD_DIR / service
         if not service_build_dir.exists():
             print(f"⚠️  Build directory not found for {service}")
@@ -73,11 +72,12 @@ def ftest(pattern=None):
 
 def lint() -> bool:
     """Run clang-format on all C++ source files in the project."""
-    # Find all C++ files in user_service and directory_service
+    # Find all C++ files in all services
     cpp_files = []
     hpp_files = []
     
-    for service_dir in [ROOT_DIR / "user_service", ROOT_DIR / "directory_service"]:
+    for service_name in SERVICES:
+        service_dir = ROOT_DIR / service_name
         src_dir = service_dir / "src"
         if src_dir.exists():
             cpp_files.extend(src_dir.rglob("*.cpp"))

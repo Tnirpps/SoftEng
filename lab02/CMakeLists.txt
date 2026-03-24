@@ -15,3 +15,4 @@ add_subdirectory(common)
 # Отдельные сервисы
 add_subdirectory(user_service)
 add_subdirectory(directory_service)
+add_subdirectory(file_service)

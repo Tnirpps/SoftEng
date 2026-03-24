@@ -1,17 +1,13 @@
 #include "in_memory_directory_repository.hpp"
 
 #include <userver/logging/log.hpp>
-#include <userver/utils/boost_uuid4.hpp>
 #include <userver/utils/datetime.hpp>
-#include <userver/utils/uuid4.hpp>
+
+#include "utils/uuid_generator.hpp"
 
 namespace Repositories {
 
 namespace {
-
-std::string GenerateUuid() {
-    return userver::utils::ToString(userver::utils::BoostUuidFromString(userver::utils::generators::GenerateUuid()));
-}
 
 bool IsDescendant(const std::map<std::string, Models::Directory> &directories,
                   const std::string &potential_descendant_id,
@@ -57,7 +53,7 @@ CreateDirectoryResult InMemoryDirectoryRepository::CreateDirectory(
         }
     }
 
-    std::string new_id = GenerateUuid();
+    std::string new_id = Utils::GenerateUuid();
     auto now = userver::utils::datetime::Now();
 
     Models::Directory new_dir{

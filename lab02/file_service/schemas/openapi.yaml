@@ -1,0 +1,144 @@
+openapi: 3.0.3
+info:
+  title: MaDisk Directory API
+  version: 1.0.0
+  description: REST API для сервиса управления файлами пользователей
+
+servers:
+  - url: /v1
+
+paths:
+  /files:
+    post:
+      summary: Загрузить новый файл
+      operationId: createFile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileCreateRequest'
+      responses:
+        '201':
+          description: Файл успешно загружен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+        '400':
+          description: Некорректные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Файл с таким именем уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT токен аутентификации
+
+  schemas:
+    FileName:
+      type: string
+      description: Имя файла
+      minLength: 1
+      maxLength: 255
+
+    FileCreateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - content
+      properties:
+        name:
+          $ref: '#/components/schemas/FileName'
+        content:
+          type: string
+          description: Содержимое файла
+        parent_id:
+          type: string
+          format: uuid
+          description: ID родительской директории (необязательно, если не указано - создаётся в корне)
+
+    File:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - size
+        - mime_type
+        - owner_id
+        - created_at
+        - updated_at
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Уникальный идентификатор файла
+        name:
+          $ref: '#/components/schemas/FileName'
+        size:
+          type: integer
+          description: Размер файла в байтах
+        mime_type:
+          type: string
+          description: MIME-тип файла
+        directory_id:
+          type: string
+          format: uuid
+          description: ID директории, в которой находится файл (null для корневой директории)
+        owner_id:
+          type: string
+          format: uuid
+          description: ID владельца файла
+        created_at:
+          type: string
+          format: date-time
+          description: Время создания файла
+        updated_at:
+          type: string
+          format: date-time
+          description: Время последнего обновления файла
+        status:
+          type: string
+          enum: [pending, scanning, available, infected]
+          description: Статус файла
+
+    ErrorResponse:
+      type: object
+      additionalProperties: true
+      required:
+        - message
+        - status
+      properties:
+        message:
+          type: string
+        status:
+          type: integer
