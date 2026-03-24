@@ -1,6 +1,7 @@
 #include "in_memory_directory_repository.hpp"
 
-#include <algorithm>
+#include <userver/logging/log.hpp>
+#include <userver/utils/boost_uuid4.hpp>
 #include <userver/utils/datetime.hpp>
 #include <userver/utils/uuid4.hpp>
 
@@ -9,7 +10,7 @@ namespace Repositories {
 namespace {
 
 std::string GenerateUuid() {
-    return userver::utils::generators::GenerateUuid();
+    return userver::utils::ToString(userver::utils::BoostUuidFromString(userver::utils::generators::GenerateUuid()));;
 }
 
 bool IsDescendant(const std::map<std::string, Models::Directory> &directories,

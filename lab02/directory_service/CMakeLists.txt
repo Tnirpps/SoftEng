@@ -38,7 +38,10 @@ if(TEST_SOURCES)
     add_executable(${PROJECT_NAME}_unittest ${TEST_SOURCES})
     target_link_libraries(${PROJECT_NAME}_unittest PRIVATE directory_service_objs userver::utest)
     add_google_tests(${PROJECT_NAME}_unittest)
-    userver_testsuite_add_simple()
+    userver_testsuite_add_simple(
+        REQUIREMENTS
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/requirements.txt
+    )
 endif()
 
 # install configs
