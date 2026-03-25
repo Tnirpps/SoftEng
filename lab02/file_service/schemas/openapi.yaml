@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: MaDisk Directory API
+  title: MaDisk File API
   version: 1.0.0
   description: REST API для сервиса управления файлами пользователей
 
@@ -52,6 +52,139 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /files/{file_id}:
+    get:
+      summary: Получить файл
+      operationId: getFile
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: file_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID файла
+      responses:
+        '200':
+          description: Файл успешно получен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Файл не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Обновить файл
+      operationId: updateFile
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: file_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID файла
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileUpdateRequest'
+      responses:
+        '200':
+          description: Файл успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+        '400':
+          description: Некорректные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Файл не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Файл с таким именем уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Удалить файл
+      operationId: deleteFile
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: file_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID файла
+      responses:
+        '200':
+          description: Файл успешно удален
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileDeleteResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Файл не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   securitySchemes:
@@ -84,6 +217,18 @@ components:
           type: string
           format: uuid
           description: ID родительской директории (необязательно, если не указано - создаётся в корне)
+
+    FileUpdateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          $ref: '#/components/schemas/FileName'
+        content:
+          type: string
+          description: Новое содержимое файла (необязательно)
 
     File:
       type: object
@@ -130,6 +275,16 @@ components:
           type: string
           enum: [pending, scanning, available, infected]
           description: Статус файла
+
+    FileDeleteResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Сообщение об успешном удалении
 
     ErrorResponse:
       type: object

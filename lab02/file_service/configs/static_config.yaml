@@ -49,6 +49,27 @@ components_manager:
             middlewares:
                 pipeline-builder: protected-handler-pipeline-builder
 
+        handler-file-get:
+            path: /v1/files/{file_id}
+            method: GET
+            task_processor: main-task-processor
+            middlewares:
+                pipeline-builder: protected-handler-pipeline-builder
+
+        handler-file-update:
+            path: /v1/files/{file_id}
+            method: PUT
+            task_processor: main-task-processor
+            middlewares:
+                pipeline-builder: protected-handler-pipeline-builder
+
+        handler-file-delete:
+            path: /v1/files/{file_id}
+            method: DELETE
+            task_processor: main-task-processor
+            middlewares:
+                pipeline-builder: protected-handler-pipeline-builder
+
         file-repository: {}
 
         jwt-credentials:

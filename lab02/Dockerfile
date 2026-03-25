@@ -20,6 +20,7 @@ RUN sed -i '/userver\/2.16-rc/d' conanfile.txt
 COPY common/ common/
 COPY user_service/ user_service/
 COPY directory_service/ directory_service/
+COPY file_service/ file_service/
 COPY CMakeLists.txt .
 
 # Install dependencies and build
@@ -35,14 +36,17 @@ WORKDIR /app
 # Copy built binaries from builder (binaries are in build/Release/)
 COPY --from=builder /app/build/Release/user_service /app/user_service/bin
 COPY --from=builder /app/build/Release/directory_service /app/directory_service/bin
+COPY --from=builder /app/build/Release/file_service /app/file_service/bin
 
-# Copy configs for both services
+# Copy configs for all services
 COPY --from=builder /app/user_service/configs/ /app/user_service/configs/
 COPY --from=builder /app/directory_service/configs/ /app/directory_service/configs/
+COPY --from=builder /app/file_service/configs/ /app/file_service/configs/
 
 # Copy schemas for codegen reference (if needed at runtime)
 COPY --from=builder /app/user_service/schemas/ /app/user_service/schemas/
 COPY --from=builder /app/directory_service/schemas/ /app/directory_service/schemas/
+COPY --from=builder /app/file_service/schemas/ /app/file_service/schemas/
 
 # Install curl for healthcheck
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
