@@ -3,6 +3,7 @@
 #include <userver/logging/log.hpp>
 #include <userver/utils/datetime.hpp>
 
+#include "utils/expected.hpp"
 #include "utils/uuid_generator.hpp"
 
 namespace Repositories {
@@ -42,14 +43,14 @@ CreateDirectoryResult InMemoryDirectoryRepository::CreateDirectory(
         if (dir.owner_id == owner_id &&
             dir.name == name &&
             dir.parent_id == parent_id) {
-            return std::unexpected(CreateDirectoryError::DirectoryAlreadyExists);
+            return Common::Utils::unexpected(CreateDirectoryError::DirectoryAlreadyExists);
         }
     }
 
     // Check parent exists if specified
     if (parent_id.has_value()) {
         if (data_ptr->find(parent_id.value()) == data_ptr->end()) {
-            return std::unexpected(CreateDirectoryError::ParentNotFound);
+            return Common::Utils::unexpected(CreateDirectoryError::ParentNotFound);
         }
     }
 
@@ -137,11 +138,11 @@ UpdateDirectoryResult InMemoryDirectoryRepository::UpdateDirectory(
     auto data_ptr = directories_.Lock();
     auto it = data_ptr->find(directory_id);
     if (it == data_ptr->end()) {
-        return std::unexpected(UpdateDirectoryError::DirectoryNotFound);
+        return Common::Utils::unexpected(UpdateDirectoryError::DirectoryNotFound);
     }
 
     if (it->second.owner_id != owner_id) {
-        return std::unexpected(UpdateDirectoryError::DirectoryNotFound);
+        return Common::Utils::unexpected(UpdateDirectoryError::DirectoryNotFound);
     }
 
     // Check for name conflict with sibling
@@ -150,7 +151,7 @@ UpdateDirectoryResult InMemoryDirectoryRepository::UpdateDirectory(
             dir.owner_id == owner_id &&
             dir.name == new_name &&
             dir.parent_id == it->second.parent_id) {
-            return std::unexpected(UpdateDirectoryError::NameConflict);
+            return Common::Utils::unexpected(UpdateDirectoryError::NameConflict);
         }
     }
 
@@ -168,11 +169,11 @@ DeleteDirectoryResult InMemoryDirectoryRepository::DeleteDirectory(
     auto data_ptr = directories_.Lock();
     auto it = data_ptr->find(directory_id);
     if (it == data_ptr->end()) {
-        return std::unexpected(DeleteDirectoryError::DirectoryNotFound);
+        return Common::Utils::unexpected(DeleteDirectoryError::DirectoryNotFound);
     }
 
     if (it->second.owner_id != owner_id) {
-        return std::unexpected(DeleteDirectoryError::DirectoryNotFound);
+        return Common::Utils::unexpected(DeleteDirectoryError::DirectoryNotFound);
     }
 
     // Check if directory has children
@@ -185,7 +186,7 @@ DeleteDirectoryResult InMemoryDirectoryRepository::DeleteDirectory(
     }
 
     if (has_children && !recursive) {
-        return std::unexpected(DeleteDirectoryError::DirectoryNotEmpty);
+        return Common::Utils::unexpected(DeleteDirectoryError::DirectoryNotEmpty);
     }
 
     if (recursive) {
@@ -222,31 +223,31 @@ MoveDirectoryResult InMemoryDirectoryRepository::MoveDirectory(
     auto data_ptr = directories_.Lock();
     auto it = data_ptr->find(directory_id);
     if (it == data_ptr->end()) {
-        return std::unexpected(MoveDirectoryError::DirectoryNotFound);
+        return Common::Utils::unexpected(MoveDirectoryError::DirectoryNotFound);
     }
 
     if (it->second.owner_id != owner_id) {
-        return std::unexpected(MoveDirectoryError::DirectoryNotFound);
+        return Common::Utils::unexpected(MoveDirectoryError::DirectoryNotFound);
     }
 
     // Check if moving to itself
     if (new_parent_id.has_value() && new_parent_id.value() == directory_id) {
-        return std::unexpected(MoveDirectoryError::WouldCreateCycle);
+        return Common::Utils::unexpected(MoveDirectoryError::WouldCreateCycle);
     }
 
     // Check if new parent exists
     if (new_parent_id.has_value()) {
         auto parent_it = data_ptr->find(new_parent_id.value());
         if (parent_it == data_ptr->end()) {
-            return std::unexpected(MoveDirectoryError::ParentNotFound);
+            return Common::Utils::unexpected(MoveDirectoryError::ParentNotFound);
         }
         if (parent_it->second.owner_id != owner_id) {
-            return std::unexpected(MoveDirectoryError::ParentNotFound);
+            return Common::Utils::unexpected(MoveDirectoryError::ParentNotFound);
         }
 
         // Check if would create cycle
         if (IsDescendant(*data_ptr, new_parent_id.value(), directory_id)) {
-            return std::unexpected(MoveDirectoryError::WouldCreateCycle);
+            return Common::Utils::unexpected(MoveDirectoryError::WouldCreateCycle);
         }
     }
 
@@ -256,7 +257,7 @@ MoveDirectoryResult InMemoryDirectoryRepository::MoveDirectory(
             dir.owner_id == owner_id &&
             dir.name == it->second.name &&
             dir.parent_id == new_parent_id) {
-            return std::unexpected(MoveDirectoryError::NameConflict);
+            return Common::Utils::unexpected(MoveDirectoryError::NameConflict);
         }
     }
 

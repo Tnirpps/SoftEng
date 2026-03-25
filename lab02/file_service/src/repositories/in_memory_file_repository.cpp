@@ -3,6 +3,7 @@
 #include <userver/logging/log.hpp>
 #include <userver/utils/datetime.hpp>
 
+#include "utils/expected.hpp"
 #include "utils/uuid_generator.hpp"
 
 namespace Repositories {
@@ -50,7 +51,7 @@ CreateFileResult InMemoryFileRepository::CreateFile(
         if (file.owner_id == owner_id &&
             file.name == name &&
             file.directory_id == directory_id) {
-            return std::unexpected(CreateFileError::FileAlreadyExists);
+            return Common::Utils::unexpected(CreateFileError::FileAlreadyExists);
         }
     }
 
@@ -77,7 +78,7 @@ GetFileResult InMemoryFileRepository::GetFile(const std::string &file_id) {
     auto data_ptr = files_.Lock();
     auto it = data_ptr->find(file_id);
     if (it == data_ptr->end()) {
-        return std::unexpected(GetFileError::FileNotFound);
+        return Common::Utils::unexpected(GetFileError::FileNotFound);
     }
     return it->second;
 }
@@ -90,11 +91,11 @@ UpdateFileResult InMemoryFileRepository::UpdateFile(
     auto data_ptr = files_.Lock();
     auto it = data_ptr->find(file_id);
     if (it == data_ptr->end()) {
-        return std::unexpected(UpdateFileError::FileNotFound);
+        return Common::Utils::unexpected(UpdateFileError::FileNotFound);
     }
 
     if (it->second.owner_id != owner_id) {
-        return std::unexpected(UpdateFileError::FileNotFound);
+        return Common::Utils::unexpected(UpdateFileError::FileNotFound);
     }
 
     // Check for name conflict with files in same directory
@@ -103,7 +104,7 @@ UpdateFileResult InMemoryFileRepository::UpdateFile(
             file.owner_id == owner_id &&
             file.name == new_name &&
             file.directory_id == it->second.directory_id) {
-            return std::unexpected(UpdateFileError::NameConflict);
+            return Common::Utils::unexpected(UpdateFileError::NameConflict);
         }
     }
 
@@ -121,11 +122,11 @@ DeleteFileResult InMemoryFileRepository::DeleteFile(
     auto data_ptr = files_.Lock();
     auto it = data_ptr->find(file_id);
     if (it == data_ptr->end()) {
-        return std::unexpected(DeleteFileError::FileNotFound);
+        return Common::Utils::unexpected(DeleteFileError::FileNotFound);
     }
 
     if (it->second.owner_id != owner_id) {
-        return std::unexpected(DeleteFileError::FileNotFound);
+        return Common::Utils::unexpected(DeleteFileError::FileNotFound);
     }
 
     data_ptr->erase(it);

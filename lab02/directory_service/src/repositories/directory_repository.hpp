@@ -1,6 +1,5 @@
 #pragma once
 
-#include <expected>
 #include <memory>
 #include <optional>
 #include <string>
@@ -12,6 +11,7 @@
 
 #include "models/directory.hpp"
 #include "models/file.hpp"
+#include "utils/expected.hpp"
 
 namespace Repositories {
 
@@ -41,11 +41,11 @@ enum class MoveDirectoryError {
     ServerError
 };
 
-using CreateDirectoryResult = std::expected<Models::Directory, CreateDirectoryError>;
+using CreateDirectoryResult = Common::Utils::expected<Models::Directory, CreateDirectoryError>;
 using GetDirectoryResult = std::optional<Models::Directory>;
-using UpdateDirectoryResult = std::expected<Models::Directory, UpdateDirectoryError>;
-using DeleteDirectoryResult = std::expected<bool, DeleteDirectoryError>;
-using MoveDirectoryResult = std::expected<Models::Directory, MoveDirectoryError>;
+using UpdateDirectoryResult = Common::Utils::expected<Models::Directory, UpdateDirectoryError>;
+using DeleteDirectoryResult = Common::Utils::expected<bool, DeleteDirectoryError>;
+using MoveDirectoryResult = Common::Utils::expected<Models::Directory, MoveDirectoryError>;
 
 struct DirectoryListParams {
     std::optional<std::string> parent_id;

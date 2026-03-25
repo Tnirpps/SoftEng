@@ -1,6 +1,5 @@
 #pragma once
 
-#include <expected>
 #include <memory>
 #include <optional>
 #include <string>
@@ -10,6 +9,7 @@
 #include <userver/yaml_config/schema.hpp>
 
 #include "models/file.hpp"
+#include "utils/expected.hpp"
 
 namespace Repositories {
 
@@ -35,10 +35,10 @@ enum class GetFileError {
     ServerError
 };
 
-using CreateFileResult = std::expected<Models::File, CreateFileError>;
-using GetFileResult = std::expected<Models::File, GetFileError>;
-using UpdateFileResult = std::expected<Models::File, UpdateFileError>;
-using DeleteFileResult = std::expected<bool, DeleteFileError>;
+using CreateFileResult = Common::Utils::expected<Models::File, CreateFileError>;
+using GetFileResult = Common::Utils::expected<Models::File, GetFileError>;
+using UpdateFileResult = Common::Utils::expected<Models::File, UpdateFileError>;
+using DeleteFileResult = Common::Utils::expected<bool, DeleteFileError>;
 
 struct FileListParams {
     std::optional<std::string> directory_id;
