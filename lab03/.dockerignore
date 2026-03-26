@@ -1,0 +1,39 @@
+# Build artifacts
+build/
+**/build/
+**/build_debug/
+
+# Conan cache
+**/conanfile.txt.lock
+**/.conan/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Docker
+docker-compose.yml
+docker/
+
+# Tests
+**/tests/
+**/test_*.py
+
+# Documentation
+*.md
+README.md

@@ -1,0 +1,19 @@
+---
+BasedOnStyle: LLVM
+IndentWidth: 4
+UseTab: Never
+ColumnLimit: 0
+BreakBeforeBraces: Attach
+SpaceBeforeParens: ControlStatements
+SortIncludes: true
+IncludeCategories:
+  - Regex: '^<.*>'
+    Priority: 1
+  - Regex: '.*'
+    Priority: 2
+BreakConstructorInitializersBeforeComma: true
+BreakConstructorInitializers: BeforeColon
+AllowShortFunctionsOnASingleLine: None
+BreakBeforeBinaryOperators: None
+PenaltyBreakAssignment: 100 
+...
