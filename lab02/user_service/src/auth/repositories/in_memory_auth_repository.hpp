@@ -24,7 +24,7 @@ class InMemoryAuthRepository : public IAuthRepository {
 
     CheckUserResult CheckUser(const std::string &login, const std::string &password) override;
     AddUserResult AddUser(const std::string &login, const std::string &password, const std::string &first_name, const std::string &last_name) override;
-    bool SearchUserByPattern(const std::string &pattern) override;
+    SearchUserResult SearchUserByPattern(const std::string &pattern) override;
     void DeleteAllUsers() override;
 
   private:

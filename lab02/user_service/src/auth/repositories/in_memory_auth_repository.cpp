@@ -50,7 +50,7 @@ AddUserResult InMemoryAuthRepository::AddUser(const std::string &login, const st
     }
 }
 
-bool InMemoryAuthRepository::SearchUserByPattern(const std::string &pattern) {
+SearchUserResult InMemoryAuthRepository::SearchUserByPattern(const std::string &pattern) {
     auto data_ptr = users_.Lock();
 
     std::string regex_pattern = "^";
@@ -67,12 +67,17 @@ bool InMemoryAuthRepository::SearchUserByPattern(const std::string &pattern) {
 
     std::regex re(regex_pattern, std::regex::icase);
 
-    for (const auto &[login, _] : *data_ptr) {
-        if (std::regex_match(login, re)) {
-            return true;
+    for (const auto &[login, user] : *data_ptr) {
+        if (std::regex_match(user.last_name, re)) {
+            return Models::User{
+                .uuid = user.uuid,
+                .login = user.login,
+                .first_name = user.first_name,
+                .last_name = user.last_name,
+                .created_at = user.created_at};
         }
     }
-    return false;
+    return std::nullopt;
 }
 
 void InMemoryAuthRepository::DeleteAllUsers() {

@@ -20,6 +20,7 @@ enum class AddUserError {
 
 using AddUserResult = std::variant<Models::User, AddUserError>;
 using CheckUserResult = std::optional<Models::User>;
+using SearchUserResult = std::optional<Models::User>;
 
 class IAuthRepository {
   public:
@@ -27,7 +28,7 @@ class IAuthRepository {
 
     virtual CheckUserResult CheckUser(const std::string &login, const std::string &password) = 0;
     virtual AddUserResult AddUser(const std::string &login, const std::string &password, const std::string &first_name, const std::string &last_name) = 0;
-    virtual bool SearchUserByPattern(const std::string &pattern) = 0;
+    virtual SearchUserResult SearchUserByPattern(const std::string &pattern) = 0;
     virtual void DeleteAllUsers() = 0;
 };
 

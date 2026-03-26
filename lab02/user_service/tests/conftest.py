@@ -53,7 +53,7 @@ async def _register_user(service_client, login: str, password: str, first_name: 
 
 @pytest.fixture
 async def default_user(service_client):
-    return await _register_user(service_client, "testuser", "123456", "Test", "User")
+    return await _register_user(service_client, "testuser", "123456", "Test", "Testov")
 
 
 @pytest.fixture

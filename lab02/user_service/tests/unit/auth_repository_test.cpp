@@ -89,3 +89,72 @@ UTEST(InMemoryAuthRepository, ConcurrentAddUsers_ThreadSafe) {
         EXPECT_TRUE(repository.CheckUser(nick, pass)) << "Failed for " << nick;
     }
 }
+
+UTEST(InMemoryAuthRepository, SearchUserByPattern_EmptyRepository_ReturnsNullopt) {
+    Repositories::InMemoryAuthRepository repository;
+
+    auto result = repository.SearchUserByPattern("test%");
+    EXPECT_FALSE(result.has_value());
+}
+
+UTEST(InMemoryAuthRepository, SearchUserByPattern_ExactMatch_ReturnsUser) {
+    Repositories::InMemoryAuthRepository repository;
+
+    repository.AddUser("testuser", "testpass", "Test", "Testov");
+
+    auto result = repository.SearchUserByPattern("Testov");
+    EXPECT_TRUE(result.has_value());
+    EXPECT_EQ(result->last_name, "Testov");
+    EXPECT_EQ(result->login, "testuser");
+}
+
+UTEST(InMemoryAuthRepository, SearchUserByPattern_WildcardPercent_Matches) {
+    Repositories::InMemoryAuthRepository repository;
+
+    repository.AddUser("testuser", "testpass", "Test", "Testov");
+
+    auto result = repository.SearchUserByPattern("Test%");
+    EXPECT_TRUE(result.has_value());
+    EXPECT_EQ(result->last_name, "Testov");
+}
+
+UTEST(InMemoryAuthRepository, SearchUserByPattern_WildcardUnderscore_Matches) {
+    Repositories::InMemoryAuthRepository repository;
+
+    repository.AddUser("testuser", "testpass", "Test", "Admin");
+
+    auto result = repository.SearchUserByPattern("A____");
+    EXPECT_TRUE(result.has_value());
+    EXPECT_EQ(result->last_name, "Admin");
+}
+
+UTEST(InMemoryAuthRepository, SearchUserByPattern_NoMatch_ReturnsNullopt) {
+    Repositories::InMemoryAuthRepository repository;
+
+    repository.AddUser("testuser", "testpass", "Test", "Testov");
+
+    auto result = repository.SearchUserByPattern("NonExistent%");
+    EXPECT_FALSE(result.has_value());
+}
+
+UTEST(InMemoryAuthRepository, SearchUserByPattern_CaseInsensitive_Matches) {
+    Repositories::InMemoryAuthRepository repository;
+
+    repository.AddUser("testuser", "testpass", "Test", "Testov");
+
+    auto result = repository.SearchUserByPattern("test%");
+    EXPECT_TRUE(result.has_value());
+    EXPECT_EQ(result->last_name, "Testov");
+}
+
+UTEST(InMemoryAuthRepository, SearchUserByPattern_MultipleUsers_ReturnsFirstMatch) {
+    Repositories::InMemoryAuthRepository repository;
+
+    repository.AddUser("user1", "pass1", "First1", "Ivanov");
+    repository.AddUser("user2", "pass2", "First2", "Petrov");
+    repository.AddUser("user3", "pass3", "First3", "Sidorov");
+
+    auto result = repository.SearchUserByPattern("%ov");
+    EXPECT_TRUE(result.has_value());
+    EXPECT_TRUE(result->last_name == "Ivanov" || result->last_name == "Petrov" || result->last_name == "Sidorov");
+}

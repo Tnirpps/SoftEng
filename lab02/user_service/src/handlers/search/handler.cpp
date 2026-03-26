@@ -3,6 +3,7 @@
 #include <userver/formats/json/value.hpp>
 #include <userver/logging/log.hpp>
 #include <userver/server/http/http_status.hpp>
+#include <userver/utils/boost_uuid4.hpp>
 
 #include "auth/auth_repository.hpp"
 #include "handlers/base_handler.hpp"
@@ -29,9 +30,21 @@ SearchHandler::HandleTypedRequest(const userver::server::http::HttpRequest &requ
         return Handlers::Error400("Pattern length must not exceed 20 characters");
     }
 
-    bool found = auth_repository_->SearchUserByPattern(pattern);
+    auto user_opt = auth_repository_->SearchUserByPattern(pattern);
 
-    return Response{.found = found};
+    if (user_opt.has_value()) {
+        const auto &user = user_opt.value();
+        return Response{
+            .found = true,
+            .user = Response::User{
+                .uuid = userver::utils::BoostUuidFromString(user.uuid),
+                .login = user.login,
+                .first_name = user.first_name,
+                .last_name = user.last_name,
+                .created_at = user.created_at}};
+    } else {
+        return Response{.found = false};
+    }
 }
 
 } // namespace Handlers

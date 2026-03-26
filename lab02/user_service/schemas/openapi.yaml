@@ -200,6 +200,28 @@ components:
         found:
           type: boolean
           description: true если найден хотя бы один пользователь с подходящей маской
+        user:
+          type: object
+          description: Информация о найденном пользователе (присутствует только если found=true)
+          required:
+            - uuid
+            - login
+            - first_name
+            - last_name
+            - created_at
+          properties:
+            uuid:
+              type: string
+              format: uuid
+            login:
+              type: string
+            first_name:
+              type: string
+            last_name:
+              type: string
+            created_at:
+              type: string
+              format: date-time
 
     ErrorResponse:
       type: object
