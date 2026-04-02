@@ -7,6 +7,7 @@
 #include <userver/logging/log.hpp>
 
 #include "auth/auth_repository.hpp"
+#include <UserService/sql_queries.hpp>
 
 namespace Auth::Repositories {
 

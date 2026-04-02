@@ -11,54 +11,6 @@
 
 namespace Auth::Repositories {
 
-namespace {
-
-const userver::storages::postgres::Query kSelectUserByLogin = {
-    R"(
-        SELECT uuid, login, first_name, last_name, created_at
-        FROM users
-        WHERE login = $1 AND password = $2
-    )",
-    userver::storages::postgres::Query::Name{"select-user-by-login"}
-};
-
-const userver::storages::postgres::Query kInsertUser = {
-    R"(
-        INSERT INTO users (login, password, first_name, last_name)
-        VALUES ($1, $2, $3, $4)
-        RETURNING uuid, login, first_name, last_name, created_at
-    )",
-    userver::storages::postgres::Query::Name{"insert-user"}
-};
-
-const userver::storages::postgres::Query kSelectUserByLoginOnly = {
-    R"(
-        SELECT uuid, login, first_name, last_name, created_at
-        FROM users
-        WHERE login = $1
-    )",
-    userver::storages::postgres::Query::Name{"select-user-by-login-only"}
-};
-
-const userver::storages::postgres::Query kSearchUserByLastNamePattern = {
-    R"(
-        SELECT uuid, login, first_name, last_name, created_at
-        FROM users
-        WHERE last_name ILIKE $1
-        LIMIT 1
-    )",
-    userver::storages::postgres::Query::Name{"search-user-by-last-name-pattern"}
-};
-
-const userver::storages::postgres::Query kDeleteAllUsers = {
-    R"(
-        DELETE FROM users
-    )",
-    userver::storages::postgres::Query::Name{"delete-all-users"}
-};
-
-} // namespace
-
 PostgresAuthRepository::PostgresAuthRepository(userver::storages::postgres::ClusterPtr cluster)
     : cluster_(std::move(cluster)) {}
 
@@ -66,7 +18,7 @@ CheckUserResult PostgresAuthRepository::CheckUser(const std::string &login, cons
     try {
         const auto result = cluster_->Execute(
             userver::storages::postgres::ClusterHostType::kSlave,
-            kSelectUserByLogin,
+            UserService::sql::kSelectUserByLogin,
             login,
             password
         );
@@ -99,14 +51,14 @@ AddUserResult PostgresAuthRepository::AddUser(
         );
 
         // First check if user exists
-        const auto check_result = transaction.Execute(kSelectUserByLoginOnly, login);
+        const auto check_result = transaction.Execute(UserService::sql::kSelectUserByLoginOnly, login);
         if (!check_result.IsEmpty()) {
             transaction.Rollback();
             return AddUserError::UserAlreadyExists;
         }
         // Insert new user
         const auto result = transaction.Execute(
-            kInsertUser,
+            UserService::sql::kInsertUser,
             login,
             password,
             first_name,
@@ -128,7 +80,7 @@ SearchUserResult PostgresAuthRepository::SearchUserByPattern(const std::string &
     try {
         const auto result = cluster_->Execute(
             userver::storages::postgres::ClusterHostType::kSlave,
-            kSearchUserByLastNamePattern,
+            UserService::sql::kSearchUserByLastNamePattern,
             "%" + pattern + "%"
         );
 
@@ -150,7 +102,7 @@ void PostgresAuthRepository::DeleteAllUsers() {
     try {
         cluster_->Execute(
             userver::storages::postgres::ClusterHostType::kMaster,
-            kDeleteAllUsers
+            UserService::sql::kDeleteAllUsers
         );
         LOG_INFO() << "All users deleted from database";
     } catch (const std::exception& e) {
