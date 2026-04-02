@@ -37,11 +37,12 @@ SearchHandler::HandleTypedRequest(const userver::server::http::HttpRequest &requ
         return Response{
             .found = true,
             .user = Response::User{
-                .uuid = userver::utils::BoostUuidFromString(user.uuid),
+                .uuid = user.uuid,
                 .login = user.login,
                 .first_name = user.first_name,
                 .last_name = user.last_name,
-                .created_at = user.created_at}};
+                .created_at = userver::utils::datetime::TimePointTz{user.created_at}
+            }};
     } else {
         return Response{.found = false};
     }

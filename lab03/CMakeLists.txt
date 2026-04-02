@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.23)
 project(MaDisk LANGUAGES CXX)
 
 # Установки, которые нужны всем
-find_package(userver REQUIRED COMPONENTS core chaotic s3api)
+find_package(userver REQUIRED COMPONENTS core chaotic s3api postgresql)
 find_package(nlohmann_json REQUIRED)
 find_package(jwt-cpp REQUIRED)
 

@@ -1,6 +1,26 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:15
+    container_name: madisk_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=user_service
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./user_service/postgresql/schemas:/docker-entrypoint-initdb.d:ro
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - madisk_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   user_service:
     build:
       context: .
@@ -15,6 +35,11 @@ services:
       - WORKER_FS_THREADS=2
       - LOGGER_LEVEL=info
       - IS_TESTING=false
+      - PG_HOST=postgres
+      - PG_PORT=5432
+      - PG_DBNAME=user_service
+      - PG_USER=postgres
+      - PG_PASSWORD=postgres
     volumes:
       - ./user_service/configs:/app/user_service/configs:ro
     networks:
@@ -55,6 +80,8 @@ services:
     security_opt:
       - seccomp:unconfined
     depends_on:
+      postgres:
+        condition: service_healthy
       user_service:
         condition: service_healthy
     healthcheck:
@@ -100,3 +127,6 @@ services:
 networks:
   madisk_network:
     driver: bridge
+
+volumes:
+  postgres_data:

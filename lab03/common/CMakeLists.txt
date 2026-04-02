@@ -14,6 +14,7 @@ target_link_libraries(common
     PUBLIC
         userver::core
         userver::s3api
+        userver::postgresql
         nlohmann_json::nlohmann_json
         jwt-cpp::jwt-cpp
 )

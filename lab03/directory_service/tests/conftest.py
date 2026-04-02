@@ -99,7 +99,6 @@ async def create_directory(client, name: str, parent_id: str = None) -> dict:
         data=json.dumps(data)
     )
     assert response.status == 201
-    print("ABOBA:", json.dumps(response.json()))
     return response.json()
 
 

@@ -1,10 +1,23 @@
 import pytest
 import json
+from testsuite.databases.pgsql import discover
 
 
 pytest_plugins = [
     "pytest_userver.plugins.core",
+    "pytest_userver.plugins.postgresql",
 ]
+
+
+@pytest.fixture(scope='session')
+def pgsql_local(service_source_dir, pgsql_local_create):
+    """Фикстура для инициализации тестовой PostgreSQL базы."""
+    
+    databases = discover.find_schemas(
+        'admin',
+        [service_source_dir.joinpath('postgresql/schemas')],
+    )
+    return pgsql_local_create(list(databases.values()))
 
 
 @pytest.fixture(autouse=True)

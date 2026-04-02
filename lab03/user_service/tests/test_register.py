@@ -2,10 +2,6 @@ import json
 import pytest
 
 
-NOW = '2019-12-31T11:22:33+00:00'
-
-
-@pytest.mark.now(NOW)
 async def test_register_user_success(service_client):
     """Test successful user registration"""
     response = await service_client.post(
@@ -22,7 +18,6 @@ async def test_register_user_success(service_client):
     assert response_json["login"] == "testuser"
     assert response_json["first_name"] == "Test"
     assert response_json["last_name"] == "User"
-    assert response_json["created_at"] == NOW
 
 
 async def test_register_user_empty_login(service_client):

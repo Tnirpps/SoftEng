@@ -2,16 +2,10 @@ import json
 import pytest
 
 
-NOW='2019-12-31T11:22:33+00:00'
-
-@pytest.mark.now(NOW)
 async def test_basic(service_client):
 
     response = await service_client.post(
         "/v1/users",
-        # params={
-        #     "name": "Tester"
-        # },
         data=json.dumps({
             "login": "test",
             "password": "123456",
@@ -25,4 +19,3 @@ async def test_basic(service_client):
     assert response_json["login"] == "test"
     assert response_json["first_name"] == "test"
     assert response_json["last_name"] == "test"
-    assert response_json["created_at"] == NOW

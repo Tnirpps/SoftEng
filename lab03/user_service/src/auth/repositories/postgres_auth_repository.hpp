@@ -1,26 +1,18 @@
 #pragma once
 
-#include <map>
 #include <string>
-#include <userver/concurrent/variable.hpp>
+
+#include <userver/storages/postgres/cluster.hpp>
+#include <userver/storages/postgres/component.hpp>
+#include <userver/logging/log.hpp>
 
 #include "auth/auth_repository.hpp"
 
 namespace Auth::Repositories {
 
-// TODO: convert into database schema
-struct User {
-    std::string uuid;
-    std::string login;
-    std::string password;
-    std::string first_name;
-    std::string last_name;
-    userver::utils::datetime::TimePointTz created_at;
-};
-
-class InMemoryAuthRepository : public IAuthRepository {
+class PostgresAuthRepository : public IAuthRepository {
   public:
-    InMemoryAuthRepository() = default;
+    explicit PostgresAuthRepository(userver::storages::postgres::ClusterPtr cluster);
 
     CheckUserResult CheckUser(const std::string &login, const std::string &password) override;
     AddUserResult AddUser(const std::string &login, const std::string &password, const std::string &first_name, const std::string &last_name) override;
@@ -28,7 +20,7 @@ class InMemoryAuthRepository : public IAuthRepository {
     void DeleteAllUsers() override;
 
   private:
-    userver::concurrent::Variable<std::map<std::string, User>> users_;
+    userver::storages::postgres::ClusterPtr cluster_;
 };
 
 } // namespace Auth::Repositories

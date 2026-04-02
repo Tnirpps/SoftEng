@@ -6,5 +6,4 @@ is-testing: true
 
 server-port: 8080
 
-
 postgress-connection: postgresql://postgres:postgres@localhost:5432/user_service

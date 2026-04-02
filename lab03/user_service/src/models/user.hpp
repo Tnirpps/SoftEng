@@ -1,14 +1,16 @@
 #pragma once
 #include <string>
-#include <userver/utils/datetime/timepoint_tz.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <userver/storages/postgres/io/chrono.hpp>
+#include <userver/storages/postgres/io/uuid.hpp>
 
 namespace Models {
 struct User {
-    std::string uuid;
+    boost::uuids::uuid uuid;
     std::string login;
     std::string first_name;
     std::string last_name;
-    userver::utils::datetime::TimePointTz created_at;
+    userver::storages::postgres::TimePointTz created_at;
 };
 
 } // namespace Models

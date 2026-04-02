@@ -11,6 +11,7 @@
 #include "auth/jwt_credentials.hpp"
 #include "handlers/base_handler.hpp"
 #include "models/user.hpp"
+#include "userver/utils/boost_uuid4.hpp"
 
 namespace Handlers {
 
@@ -42,12 +43,10 @@ LoginHandler::HandleTypedRequest(const userver::server::http::HttpRequest & /*re
                      .set_type("JWT")
                      .set_subject(user.login)
                      .set_payload_claim("login", user.login)
-                     .set_payload_claim("uuid", user.uuid)
+                     .set_payload_claim("uuid", userver::utils::ToString(user.uuid))
                      .set_issued_at(now)
                      .set_expires_at(exp)
                      .sign(jwt::algorithm::hs256{jwt_credentials_.GetSecret()});
-
-    LOG_INFO() << "[ABOBA] Geberated token: " << token;
 
     return Response{
         .login = user.login,

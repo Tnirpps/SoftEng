@@ -33,13 +33,12 @@ RegisterHandler::HandleTypedRequest(const userver::server::http::HttpRequest & /
 
     const auto &user = std::get<Models::User>(result);
 
-    // TODO: store first_name and last_name in the database
     return Response{
-        .uuid = userver::utils::BoostUuidFromString(user.uuid),
+        .uuid = user.uuid,
         .login = user.login,
         .first_name = body.first_name,
         .last_name = body.last_name,
-        .created_at = user.created_at};
+        .created_at = userver::utils::datetime::TimePointTz{user.created_at}};
 }
 
 } // namespace Handlers
