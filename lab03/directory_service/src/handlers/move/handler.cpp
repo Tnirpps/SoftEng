@@ -53,12 +53,12 @@ MoveHandler::HandleTypedRequest(const userver::server::http::HttpRequest &reques
     const auto &dir = result.value();
 
     return Response{
-        .id = userver::utils::BoostUuidFromString(dir.id),
+        .id = dir.uuid,
         .name = dir.name,
-        .parent_id = dir.parent_id.has_value() ? std::optional<boost::uuids::uuid>(userver::utils::BoostUuidFromString(*dir.parent_id)) : std::nullopt,
-        .owner_id = userver::utils::BoostUuidFromString(dir.owner_id),
-        .created_at = dir.created_at,
-        .updated_at = dir.updated_at,
+        .parent_id = dir.parent_uuid,
+        .owner_id = dir.owner_uuid,
+        .created_at = userver::utils::datetime::TimePointTz(dir.created_at),
+        .updated_at = userver::utils::datetime::TimePointTz(dir.updated_at),
         .is_root = dir.is_root};
 }
 

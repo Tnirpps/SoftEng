@@ -36,7 +36,7 @@ FilesListHandler::HandleTypedRequest(const userver::server::http::HttpRequest &r
 
     // First check if directory exists and belongs to user
     auto dir_result = directory_repository_->GetDirectory(directory_id);
-    if (!dir_result.has_value() || dir_result->owner_id != owner_id) {
+    if (!dir_result.has_value() || dir_result->owner_uuid != userver::utils::BoostUuidFromString(owner_id)) {
         return Error404("Directory not found");
     }
 
@@ -51,15 +51,15 @@ FilesListHandler::HandleTypedRequest(const userver::server::http::HttpRequest &r
     items.reserve(result.items.size());
     for (const auto &file : result.items) {
         items.push_back(Gen::openapi::FileMetadata{
-            .id = userver::utils::BoostUuidFromString(file.id),
+            .id = file.uuid,
             .name = file.name,
             .size = static_cast<int>(file.size),
             .mime_type = file.mime_type,
-            .directory_id = userver::utils::BoostUuidFromString(file.directory_id),
-            .owner_id = userver::utils::BoostUuidFromString(file.owner_id),
-            .created_at = file.created_at,
-            .updated_at = file.updated_at,
-            .status = static_cast<Gen::openapi::FileMetadata::Status>(file.status)});
+            .directory_id = file.directory_uuid,
+            .owner_id = file.owner_uuid,
+            .created_at = userver::utils::datetime::TimePointTz(file.created_at),
+            .updated_at = userver::utils::datetime::TimePointTz(file.updated_at),
+            .status = static_cast<Gen::openapi::FileMetadata::Status>(Models::FileStatus::Pending)});// file.status)});
     }
 
     return Response{

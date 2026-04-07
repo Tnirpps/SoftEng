@@ -1,17 +1,21 @@
 #pragma once
 
-#include <map>
 #include <string>
-#include <userver/concurrent/variable.hpp>
+
+#include <userver/storages/postgres/cluster.hpp>
+#include <userver/storages/postgres/component.hpp>
+#include <userver/logging/log.hpp>
 
 #include "repositories/directory_repository.hpp"
+#include <DirectoryService/sql_queries.hpp>
 
 namespace Repositories {
 
-class InMemoryDirectoryRepository : public IDirectoryRepository {
+class PostgresDirectoryRepository : public IDirectoryRepository {
   public:
-    InMemoryDirectoryRepository() = default;
+    explicit PostgresDirectoryRepository(userver::storages::postgres::ClusterPtr cluster);
 
+    // Directory operations
     CreateDirectoryResult CreateDirectory(const std::string &name,
                                           const std::optional<std::string> &parent_id,
                                           const std::string &owner_id) override;
@@ -27,13 +31,16 @@ class InMemoryDirectoryRepository : public IDirectoryRepository {
     MoveDirectoryResult MoveDirectory(const std::string &directory_id,
                                       const std::optional<std::string> &new_parent_id,
                                       const std::string &owner_id) override;
+
+    // File operations
     FileListResult ListFiles(const FileListParams &params,
                              const std::string &owner_id) override;
+
+    // Test support
     void DeleteAll() override;
 
   private:
-    userver::concurrent::Variable<std::map<std::string, Models::Directory>> directories_;
-    userver::concurrent::Variable<std::map<std::string, Models::File>> files_;
+    userver::storages::postgres::ClusterPtr cluster_;
 };
 
 } // namespace Repositories

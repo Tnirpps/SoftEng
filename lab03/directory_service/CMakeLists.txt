@@ -29,6 +29,20 @@ if(SCHEMAS)
     target_link_libraries(directory_service_objs PUBLIC ${PROJECT_NAME}-chgen)
 endif()
 
+# SQL queries library
+userver_add_sql_library(
+    ${PROJECT_NAME}_sql
+    NAMESPACE
+    DirectoryService
+    SOURCE_DIR
+    queries
+    OUTPUT_DIR
+    ${CMAKE_CURRENT_BINARY_DIR}
+    SQL_FILES
+    *.sql
+)
+target_link_libraries(directory_service_objs PUBLIC ${PROJECT_NAME}_sql)
+
 # main binary
 add_executable(${PROJECT_NAME} src/main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE directory_service_objs)

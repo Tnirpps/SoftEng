@@ -93,6 +93,11 @@ components_manager:
 
         directory-repository: {}
 
+        directory-database:
+            dbconnection: $postgress-connection
+            blocking_task_processor: fs-task-processor
+            dns_resolver: async
+
         jwt-credentials:
             # Store secret in configs instead of env
             # just for the sake of simplicity
