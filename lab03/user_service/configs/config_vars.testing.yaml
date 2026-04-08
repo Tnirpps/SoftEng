@@ -4,7 +4,7 @@ logger-level: debug
 
 is-testing: true
 
-server-port: 8080
+server-port: 8081
 
 
 postgress-connection: postgresql://postgres:postgres@localhost:5432/user_service
