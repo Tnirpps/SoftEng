@@ -1,159 +1,167 @@
-# MaDisk — Система хранения файлов
+# MaDisk - Система управления файлами и директориями
 
-Микросервисная система облачного хранения файлов, реализованная на C++ с использованием фреймворка Userver.
+## Схема базы данных
 
-## Архитектура
+### Файлы схемы
 
-Система состоит из трёх сервисов:
+Схема базы данных разделена на два файла в директории [`init-db/`](./init-db/). Эти файлы автоматически выполняются при первом запуске PostgreSQL через Docker Compose:
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  User Service   │     │ Directory Svc   │     │  File Service   │
-│   (порт 8081)   │     │   (порт 8082)   │     │   (порт 8083)   │
-├─────────────────┤     ├─────────────────┤     ├─────────────────┤
-│ • Регистрация   │     │ • CRUD папок    │     │ • Загрузка      │
-│ • Аутентификация│     │ • Навигация     │     │ • Метаданные    │
-│ • Поиск         │     │ • Перемещение   │     │ • Статусы       │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-```
+- [`init-db/01-users.sql`](./init-db/01-users.sql) - таблица `users` для User Service
+- [`init-db/02-directories.sql`](./init-db/02-directories.sql) - таблицы `directories` и `files` для Directory Service
 
-## Сервисы
+### Структура таблиц
 
-| Сервис | Порт | Описание |
-|--------|------|----------|
-| User Service | 8081 | Управление пользователями и аутентификация |
-| Directory Service | 8082 | Управление иерархией директорий |
-| File Service | 8083 | Управление файлами |
+#### users (User Service)
 
-## Быстрый старт
+| Поле | Тип | Описание |
+|------|-----|----------|
+| uuid | UUID | Первичный ключ (auto-generated) |
+| login | VARCHAR(20) | Уникальный логин пользователя |
+| password | VARCHAR(40) | Хэш пароля |
+| first_name | VARCHAR(20) | Имя |
+| last_name | VARCHAR(20) | Фамилия |
+| created_at | TIMESTAMPTZ | Дата создания записи |
+
+**Индексы:**
+- PRIMARY KEY на `uuid`
+- UNIQUE на `login`
+- GIN индекс на `last_name` с `gin_trgm_ops` для поиска по маске (ILIKE)
+
+#### directories (Directory Service)
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| uuid | UUID | Первичный ключ (auto-generated) |
+| name | VARCHAR(255) | Имя директории |
+| parent_uuid | UUID | Ссылка на родительскую директорию (NULL для корневых) |
+| owner_uuid | UUID | Владелец директории |
+| created_at | TIMESTAMPTZ | Дата создания |
+| updated_at | TIMESTAMPTZ | Дата последнего обновления |
+| is_root | BOOLEAN | Флаг корневой директории |
+
+**Индексы:**
+- PRIMARY KEY на `uuid`
+- UNIQUE на `(owner_uuid, parent_uuid, name)`
+- B-Tree индекс на `parent_uuid` (проверка наличия дочерних элементов)
+- B-Tree индекс на `owner_uuid` (листинг директорий пользователя)
+- Composite индекс на `(owner_uuid, parent_uuid)` (фильтрация по владельцу и родителю)
+
+#### files (Directory Service)
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| uuid | UUID | Первичный ключ (auto-generated) |
+| name | VARCHAR(255) | Имя файла |
+| size | BIGINT | Размер в байтах |
+| mime_type | VARCHAR(255) | MIME-тип |
+| directory_uuid | UUID | Ссылка на родительскую директорию |
+| owner_uuid | UUID | Владелец файла |
+| created_at | TIMESTAMPTZ | Дата создания |
+| updated_at | TIMESTAMPTZ | Дата последнего обновления |
+| status | VARCHAR(50) | Статус файла (pending/scanning/available/infected) |
+
+**Индексы:**
+- PRIMARY KEY на `uuid`
+- B-Tree индекс на `directory_uuid` (листинг файлов в директории)
+- B-Tree индекс на `owner_uuid` (листинг файлов пользователя)
+- Composite индекс на `(directory_uuid, owner_uuid)` (комбинированная фильтрация)
+
+## Запуск
 
 ### Требования
 
-#### Для локальной разработки
-- C++23 совместимый компилятор
-- Conan Package Manager
-- CMake 3.24+
-- Python 3.11+
-
-#### Для Docker
 - Docker и Docker Compose
+- PostgreSQL 15+ (создается автоматически через Docker)
 
-### Сборка и запуск
+### Быстрый старт
 
-#### Локальная сборка (не рекомендуется)
-Для такой сборки нужен установленный Conan и заранее собранный userver/2.16-rc (см. [документацию userver](https://userver.tech/docs/v2.0/da/de1/md_en_2userver_2tutorial_2build__userver.html#autotoc_md550)).
-
-```bash
-# Полная сборка (bootstrap + configure + build)
-python3 build.py all
-
-# Или по шагам:
-python3 build.py bootstrap    # Установка зависимостей через Conan
-python3 build.py configure    # Настройка CMake
-python3 build.py build        # Сборка всех сервисов
-
-# Запуск сервиса
-python3 build.py start user_service
-python3 build.py start directory_service
-```
-
-#### Запуск в Docker (рекомендуется)
+1. Клонируйте репозиторий
+2. Запустите все сервисы через Docker Compose:
 
 ```bash
-# Сборка образов и запуск всех сервисов
-python3 build.py docker-up
-
-# Остановка сервисов
-python3 build.py docker-down
+cd lab03
+docker-compose up --build
 ```
 
-После запуска сервисы доступны:
+После запуска сервисы будут доступны по адресам:
 - User Service: http://localhost:8081
 - Directory Service: http://localhost:8082
 - File Service: http://localhost:8083
+- PostgreSQL: localhost:5432 (postgres/postgres)
 
-## Тестирование
+### Проверка здоровья
 
 ```bash
-# Unit-тесты (C++)
-python3 build.py test
-
-# Функциональные тесты (pytest)
-python3 build.py ftest                    # Все тесты
-python3 build.py ftest "test_register"    # Конкретный тест
-
-# Тесты отдельного сервиса через pytest
-python3 build.py ftest -k "test_login"    # Поиск по паттерну
+curl http://localhost:8081/ping  # User Service
+curl http://localhost:8082/ping  # Directory Service
+curl http://localhost:8083/ping  # File Service
 ```
+
+## Оптимизация базы данных
+
+[`local/DESIGN_REPORT.md`](./local/DESIGN_REPORT.md).
 
 ## API Документация
 
-Каждый сервис имеет OpenAPI спецификацию:
+Полная документация API доступна в OpenAPI спецификациях:
 
-- [User Service API](user_service/schemas/openapi.yaml)
-- [Directory Service API](directory_service/schemas/openapi.yaml)
-- [File Service API](file_service/schemas/openapi.yaml)
+- [User Service API](./user_service/schemas/openapi.yaml)
+- [Directory Service API](./directory_service/schemas/openapi.yaml)
+- [File Service API](./file_service/schemas/openapi.yaml)
 
-### Примеры запросов
+### Основные эндпоинты
 
-#### Регистрация пользователя
+#### User Service
+
+| Метод | Эндпоинт | Описание |
+|-------|----------|----------|
+| POST | `/api/v1/users/register` | Регистрация пользователя |
+| POST | `/api/v1/users/login` | Аутентификация |
+| GET | `/api/v1/users/search` | Поиск пользователей по фамилии |
+
+#### Directory Service
+
+| Метод | Эндпоинт | Описание |
+|-------|----------|----------|
+| POST | `/api/v1/directories` | Создание директории |
+| GET | `/api/v1/directories/:uuid` | Получение директории |
+| PUT | `/api/v1/directories/:uuid` | Обновление директории |
+| DELETE | `/api/v1/directories/:uuid` | Удаление директории |
+| POST | `/api/v1/directories/:uuid/move` | Перемещение директории |
+| GET | `/api/v1/directories` | Листинг директорий |
+| GET | `/api/v1/directories/:uuid/files` | Листинг файлов в директории |
+
+### Генерация тестовых данных для БД
+
 ```bash
-curl -X POST http://localhost:8081/v1/users \
-  -H "Content-Type: application/json" \
-  -d '{"login": "user", "password": "123456", "first_name": "Test", "last_name": "User"}'
-```
-
-#### Аутентификация
-```bash
-curl -X POST http://localhost:8081/v1/users/login \
-  -H "Content-Type: application/json" \
-  -d '{"login": "user", "password": "123456"}'
-```
-
-#### Создание директории
-```bash
-curl -X POST http://localhost:8082/v1/directories \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <TOKEN>" \
-  -d '{"name": "Documents"}'
-```
-
-#### Загрузка файла
-```bash
-curl -X POST http://localhost:8083/v1/files \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <TOKEN>" \
-  -d '{"name": "test.txt", "content": "Hello"}'
+cd lab03/tools
+python generate_test_data.py
+python generate_test_users.py
 ```
 
 ## Структура проекта
 
 ```
-lab02/
-├── common/                # Общие компоненты
-│   ├── auth/              # JWT аутентификация
-│   └── utils/             # Утилиты (UUID, request args)
-├── user_service/          # Сервис пользователей
+lab03/
+├── init-db/                    # Скрипты инициализации БД
+│   ├── 01-users.sql           # Схема users
+│   └── 02-directories.sql     # Схема directories + files
+├── user_service/              # Сервис пользователей
 │   ├── src/
-│   ├── tests/
-│   └── schemas/
-├── directory_service/     # Сервис директорий
+│   ├── queries/
+│   ├── postgresql/schemas/
+│   └── tests/
+├── directory_service/         # Сервис директорий
 │   ├── src/
-│   ├── tests/
-│   └── schemas/
-├── file_service/          # Сервис файлов
+│   ├── queries/
+│   ├── postgresql/schemas/
+│   └── tests/
+├── file_service/              # Сервис файлов
 │   ├── src/
-│   ├── tests/
-│   └── schemas/
-├── Dockerfile             # Docker образ для всех сервисов
-└── docker-compose.yml     # Оркестрация сервисов
+│   └── tests/
+├── common/                    # Общие утилиты и модели
+├── tools/                     # Утилиты для генерации данных
+├── docker-compose.yml         # Конфигурация Docker Compose
+├── Dockerfile                 # Docker образ для сборки
+└── README.md                  # Этот файл
 ```
-
-## TODO
-
-### Целевая архитектура (Lab 01)
-- [ ] Интеграция с PostgreSQL для хранения данных
-- [ ] Интеграция с MinIO для хранения файлов
-- [ ] Реализация асинхронной проверки антивирусом через RabbitMQ
-- [ ] gRPC коммуникация между сервисами
-- [ ] API Gateway (Nginx) для маршрутизации запросов
