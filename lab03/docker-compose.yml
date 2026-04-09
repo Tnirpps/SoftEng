@@ -11,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./user_service/postgresql/schemas:/docker-entrypoint-initdb.d:ro
+      - ./init-db:/docker-entrypoint-initdb.d:ro
       - postgres_data:/var/lib/postgresql/data
     networks:
       - madisk_network
