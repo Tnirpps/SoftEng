@@ -1,4 +1,3 @@
--- Users table schema optimized for high-load
 CREATE TABLE IF NOT EXISTS users (
     uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     login VARCHAR(20) NOT NULL,
@@ -9,8 +8,6 @@ CREATE TABLE IF NOT EXISTS users (
     CONSTRAINT users_login_unique UNIQUE (login)
 );
 
--- Index for login lookups (used in authentication)
-CREATE INDEX IF NOT EXISTS idx_users_login ON users USING btree (login);
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
--- Index for last_name search (used in search functionality)
-CREATE INDEX IF NOT EXISTS idx_users_last_name ON users USING btree (last_name);
+CREATE INDEX IF NOT EXISTS idx_users_last_name_trgm ON users USING gin (last_name gin_trgm_ops);
