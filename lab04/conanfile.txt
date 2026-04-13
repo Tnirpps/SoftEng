@@ -1,0 +1,11 @@
+[requires]
+userver/2.16-rc
+jwt-cpp/0.7.1
+nlohmann_json/3.12.0
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[layout]
+cmake_layout
