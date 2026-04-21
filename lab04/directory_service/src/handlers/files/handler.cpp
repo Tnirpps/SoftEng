@@ -59,7 +59,7 @@ FilesListHandler::HandleTypedRequest(const userver::server::http::HttpRequest &r
             .owner_id = file.owner_uuid,
             .created_at = userver::utils::datetime::TimePointTz(file.created_at),
             .updated_at = userver::utils::datetime::TimePointTz(file.updated_at),
-            .status = static_cast<Gen::openapi::FileMetadata::Status>(Models::FileStatus::Pending)});// file.status)});
+            .status = static_cast<Gen::openapi::FileMetadata::Status>(Models::FileStatus::Pending)}); // file.status)});
     }
 
     return Response{

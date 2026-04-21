@@ -2,12 +2,12 @@
 
 #include <string>
 
+#include <userver/logging/log.hpp>
 #include <userver/storages/postgres/cluster.hpp>
 #include <userver/storages/postgres/component.hpp>
-#include <userver/logging/log.hpp>
 
-#include "auth/auth_repository.hpp"
 #include <UserService/sql_queries.hpp>
+#include "auth/auth_repository.hpp"
 
 namespace Auth::Repositories {
 

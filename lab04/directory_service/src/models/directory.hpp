@@ -1,8 +1,8 @@
 #pragma once
 
+#include <boost/uuid/uuid.hpp>
 #include <optional>
 #include <string>
-#include <boost/uuid/uuid.hpp>
 #include <userver/storages/postgres/io/chrono.hpp>
 #include <userver/storages/postgres/io/uuid.hpp>
 #include <userver/utils/boost_uuid4.hpp>
@@ -22,14 +22,14 @@ struct Directory {
     std::string GetId() const {
         return userver::utils::ToString(uuid);
     }
-    
+
     std::optional<std::string> GetParentId() const {
         if (!parent_uuid.has_value()) {
             return std::nullopt;
         }
         return userver::utils::ToString(parent_uuid.value());
     }
-    
+
     std::string GetOwnerId() const {
         return userver::utils::ToString(owner_uuid);
     }

@@ -29,6 +29,9 @@ components_manager:
         dns-client:
             fs-task-processor: fs-task-processor
 
+        mongo-files:
+            dbconnection: $mongo-connection
+
         tests-control:
             load-enabled: $is-testing
             path: /tests/{action}

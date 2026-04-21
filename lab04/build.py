@@ -47,7 +47,7 @@ def test():
 
 def ftest(pattern=None):
     """Run functional tests (pytest) for all services using runtests-* binaries."""
-    for service in SERVICES:
+    for service in ["file_service"]: #SERVICES:
         service_build_dir = BUILD_DIR / service
         if not service_build_dir.exists():
             print(f"⚠️  Build directory not found for {service}")

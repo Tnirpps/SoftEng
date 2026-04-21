@@ -1,6 +1,6 @@
 #pragma once
-#include <string>
 #include <boost/uuid/uuid.hpp>
+#include <string>
 #include <userver/storages/postgres/io/chrono.hpp>
 #include <userver/storages/postgres/io/uuid.hpp>
 

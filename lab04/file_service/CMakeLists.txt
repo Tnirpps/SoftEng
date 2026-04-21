@@ -10,8 +10,7 @@ add_library(file_service_objs OBJECT ${SOURCES})
 target_link_libraries(file_service_objs
     PUBLIC
         userver::core
-        userver::s3api
-        userver::postgresql
+        userver::mongo
         common
 )
 
@@ -38,7 +37,7 @@ file(GLOB_RECURSE TEST_SOURCES tests/unit/*.cpp)
 if(TEST_SOURCES)
     add_executable(${PROJECT_NAME}_unittest ${TEST_SOURCES})
     target_link_libraries(${PROJECT_NAME}_unittest PRIVATE file_service_objs userver::utest)
-    add_google_tests(${PROJECT_NAME}_unittest)
+    userver_add_utest(NAME ${PROJECT_NAME}_unittest)
     userver_testsuite_add_simple(
         REQUIREMENTS
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/requirements.txt

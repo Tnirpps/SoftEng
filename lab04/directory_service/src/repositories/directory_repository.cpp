@@ -14,7 +14,7 @@ namespace Repositories {
 DirectoryComponent::DirectoryComponent(const userver::components::ComponentConfig &config,
                                        const userver::components::ComponentContext &context)
     : ComponentBase(config, context) {
-    auto& pg_component = context.FindComponent<userver::components::Postgres>("directory-database");
+    auto &pg_component = context.FindComponent<userver::components::Postgres>("directory-database");
     auto cluster = pg_component.GetCluster();
     repository_ = std::make_shared<PostgresDirectoryRepository>(std::move(cluster));
 

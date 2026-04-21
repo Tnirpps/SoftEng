@@ -5,3 +5,4 @@ logger-level: debug
 is-testing: true
 
 server-port: 8083
+mongo-connection: mongodb://localhost:27217/admin

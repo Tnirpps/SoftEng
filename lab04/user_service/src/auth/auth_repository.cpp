@@ -14,7 +14,7 @@ namespace Auth {
 AuthComponent::AuthComponent(const userver::components::ComponentConfig &config,
                              const userver::components::ComponentContext &context)
     : ComponentBase(config, context) {
-    auto& pg_component = context.FindComponent<userver::components::Postgres>("user-database");
+    auto &pg_component = context.FindComponent<userver::components::Postgres>("user-database");
     auto cluster = pg_component.GetCluster();
     repository_ = std::make_shared<Repositories::PostgresAuthRepository>(std::move(cluster));
 

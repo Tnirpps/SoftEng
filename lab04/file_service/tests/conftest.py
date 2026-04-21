@@ -7,7 +7,25 @@ from datetime import datetime, timedelta
 
 pytest_plugins = [
     "pytest_userver.plugins.core",
+    "pytest_userver.plugins.mongo",
 ]
+
+
+MONGO_COLLECTIONS = {
+    'files': {
+        'settings': {
+            'collection': 'files',
+            'connection': 'mongo-files',
+            'database': 'admin',
+        },
+        'indexes': [],
+    },
+}
+
+
+@pytest.fixture(scope='session')
+def mongodb_settings():
+    return MONGO_COLLECTIONS
 
 
 # JWT secret from static_config.yaml

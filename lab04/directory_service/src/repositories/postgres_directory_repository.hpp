@@ -2,12 +2,12 @@
 
 #include <string>
 
+#include <userver/logging/log.hpp>
 #include <userver/storages/postgres/cluster.hpp>
 #include <userver/storages/postgres/component.hpp>
-#include <userver/logging/log.hpp>
 
-#include "repositories/directory_repository.hpp"
 #include <DirectoryService/sql_queries.hpp>
+#include "repositories/directory_repository.hpp"
 
 namespace Repositories {
 

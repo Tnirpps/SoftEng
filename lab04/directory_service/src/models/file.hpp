@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <boost/uuid/uuid.hpp>
+#include <string>
 #include <userver/storages/postgres/io/chrono.hpp>
 #include <userver/storages/postgres/io/uuid.hpp>
 #include <userver/utils/boost_uuid4.hpp>
@@ -30,11 +30,11 @@ struct File {
     std::string GetId() const {
         return userver::utils::ToString(uuid);
     }
-    
+
     std::string GetDirectoryId() const {
         return userver::utils::ToString(directory_uuid);
     }
-    
+
     std::string GetOwnerId() const {
         return userver::utils::ToString(owner_uuid);
     }
