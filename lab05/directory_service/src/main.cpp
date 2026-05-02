@@ -13,7 +13,7 @@
 #include <userver/testsuite/testsuite_support.hpp>
 #include <userver/utils/daemon_run.hpp>
 
-#include "cache/directory_files_cache.hpp"
+#include "cache/directory_cache.hpp"
 #include "handlers/create/handler.hpp"
 #include "handlers/delete/handler.hpp"
 #include "handlers/files/handler.hpp"
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
                               .Append<Handlers::DeleteHandler>()
                               .Append<Handlers::MoveHandler>()
                               .Append<Handlers::FilesListHandler>()
-                              .Append<Cache::DirectoryFilesCacheComponent>()
+                              .Append<Cache::DirectoryCacheComponent>()
                               .Append<Repositories::DirectoryComponent>()
                               .Append<userver::components::Postgres>("directory-database")
                               .Append<Auth::JwtCredentials>()

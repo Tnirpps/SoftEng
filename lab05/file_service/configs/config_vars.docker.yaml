@@ -6,4 +6,6 @@ is-testing: false
 
 server-port: 8080
 file-write-rps: 10
+file-cache-ttl-seconds: 300
+secdist-path: /app/file_service/configs/secure_data.docker.json
 mongo-connection: mongodb://mongo:mongo@mongo:27017/admin

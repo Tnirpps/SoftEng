@@ -1,0 +1,19 @@
+{
+  "redis_settings": {
+    "directory-cache": {
+      "password": "",
+      "sentinels": [
+        {
+          "host": "localhost",
+          "port": 6379
+        }
+      ],
+      "shards": [
+        {
+          "name": "test_standalone_master0"
+        }
+      ],
+      "database_index": 0
+    }
+  }
+}

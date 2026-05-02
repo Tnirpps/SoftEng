@@ -5,6 +5,7 @@
 #include <userver/server/handlers/http_handler_base.hpp>
 #include <userver/server/http/http_status.hpp>
 
+#include "cache/directory_cache.hpp"
 #include "handlers/base_handler.hpp"
 #include "repositories/directory_repository.hpp"
 #include "schemas/openapi.hpp"
@@ -27,6 +28,7 @@ class GetHandler final
                                        userver::server::request::RequestContext &context) const override;
 
   private:
+    const Cache::DirectoryCache& cache_;
     std::shared_ptr<Repositories::IDirectoryRepository> directory_repository_;
 };
 

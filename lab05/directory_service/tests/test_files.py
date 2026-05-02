@@ -67,7 +67,7 @@ async def test_list_files_creates_cache_entry(authorized_client, root_directory,
     )
     assert response.status == 200
 
-    cache_key = f"dir-files:{test_user['user_id']}:{root_directory['id']}:20:0"
+    cache_key = f"dir-files:v0:{test_user['user_id']}:{root_directory['id']}:20:0"
     cached_value = redis_store.get(cache_key)
 
     assert cached_value is not None
@@ -86,8 +86,8 @@ async def test_list_files_uses_separate_keys_for_pagination(authorized_client, r
     )
     assert response.status == 200
 
-    default_key = f"dir-files:{test_user['user_id']}:{root_directory['id']}:20:0"
-    paginated_key = f"dir-files:{test_user['user_id']}:{root_directory['id']}:5:10"
+    default_key = f"dir-files:v0:{test_user['user_id']}:{root_directory['id']}:20:0"
+    paginated_key = f"dir-files:v0:{test_user['user_id']}:{root_directory['id']}:5:10"
 
     assert redis_store.get(default_key) is None
     assert redis_store.get(paginated_key) is not None
@@ -102,7 +102,7 @@ async def test_list_files_not_found_is_not_cached(authorized_client, test_user, 
     )
     assert response.status == 404
 
-    cache_key = f"dir-files:{test_user['user_id']}:{fake_id}:20:0"
+    cache_key = f"dir-files:v0:{test_user['user_id']}:{fake_id}:20:0"
     assert redis_store.get(cache_key) is None
 
 
@@ -114,5 +114,5 @@ async def test_list_files_unauthorized_is_not_cached(service_client, root_direct
     )
     assert response.status == 401
 
-    cache_key = f"dir-files:{test_user['user_id']}:{root_directory['id']}:20:0"
+    cache_key = f"dir-files:v0:{test_user['user_id']}:{root_directory['id']}:20:0"
     assert redis_store.get(cache_key) is None

@@ -11,6 +11,7 @@ target_link_libraries(file_service_objs
     PUBLIC
         userver::core
         userver::mongo
+        userver::redis
         common
 )
 

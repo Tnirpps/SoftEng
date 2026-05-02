@@ -9,6 +9,7 @@ namespace Handlers {
 DeleteHandler::DeleteHandler(const userver::components::ComponentConfig &config,
                              const userver::components::ComponentContext &context)
     : TypedHandler(config, context)
+    , cache_(context.FindComponent<Cache::FileCacheComponent>().GetCache())
     , file_repository_(context.FindComponent<Repositories::FileComponent>().GetRepository()) {
 }
 
@@ -27,6 +28,17 @@ DeleteHandler::HandleTypedRequest(const userver::server::http::HttpRequest &requ
         return Error400("File ID is required");
     }
 
+    std::optional<std::string> directory_id_for_invalidation;
+    auto file_before_delete = file_repository_->GetFile(file_id);
+    if (file_before_delete.has_value()) {
+        if (file_before_delete->owner_id != owner_id) {
+            return Error404("File not found");
+        }
+        directory_id_for_invalidation = file_before_delete->directory_id;
+    } else if (file_before_delete.error() == Repositories::GetFileError::ServerError) {
+        return Error500("Internal server error");
+    }
+
     auto result = file_repository_->DeleteFile(file_id, owner_id);
 
     if (!result.has_value()) {
@@ -36,6 +48,11 @@ DeleteHandler::HandleTypedRequest(const userver::server::http::HttpRequest &requ
         case Repositories::DeleteFileError::ServerError:
             return Error500("Internal server error");
         }
+    }
+
+    cache_.InvalidateFile(owner_id, file_id);
+    if (directory_id_for_invalidation.has_value()) {
+        cache_.InvalidateDirectoryFiles(owner_id, *directory_id_for_invalidation);
     }
 
     return Response{

@@ -9,6 +9,7 @@ namespace Handlers {
 UpdateHandler::UpdateHandler(const userver::components::ComponentConfig &config,
                              const userver::components::ComponentContext &context)
     : TypedJsonHandler(config, context)
+    , cache_(context.FindComponent<Cache::FileCacheComponent>().GetCache())
     , file_repository_(context.FindComponent<Repositories::FileComponent>().GetRepository()) {
 }
 
@@ -46,6 +47,11 @@ UpdateHandler::HandleTypedRequest(const userver::server::http::HttpRequest &requ
     }
 
     const auto &file = result.value();
+
+    cache_.InvalidateFile(owner_id, file_id);
+    if (file.directory_id.has_value()) {
+        cache_.InvalidateDirectoryFiles(owner_id, *file.directory_id);
+    }
 
     return Response{
         .id = userver::utils::BoostUuidFromString(file.id),

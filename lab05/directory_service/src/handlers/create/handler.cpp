@@ -11,6 +11,7 @@ namespace Handlers {
 CreateHandler::CreateHandler(const userver::components::ComponentConfig &config,
                              const userver::components::ComponentContext &context)
     : TypedJsonHandler(config, context)
+    , cache_(context.FindComponent<Cache::DirectoryCacheComponent>().GetCache())
     , directory_repository_(context.FindComponent<Repositories::DirectoryComponent>().GetRepository()) {
 }
 
@@ -44,6 +45,8 @@ CreateHandler::HandleTypedRequest(const userver::server::http::HttpRequest & /*r
     }
 
     const auto &dir = result.value();
+
+    cache_.InvalidateDirectoryList(owner_id, parent_id);
 
     return Response{
         .id = dir.uuid,

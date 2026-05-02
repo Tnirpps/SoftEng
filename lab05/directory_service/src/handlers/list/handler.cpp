@@ -10,6 +10,7 @@ namespace Handlers {
 ListHandler::ListHandler(const userver::components::ComponentConfig &config,
                          const userver::components::ComponentContext &context)
     : TypedHandler(config, context)
+    , cache_(context.FindComponent<Cache::DirectoryCacheComponent>().GetCache())
     , directory_repository_(context.FindComponent<Repositories::DirectoryComponent>().GetRepository()) {
 }
 
@@ -35,6 +36,10 @@ ListHandler::HandleTypedRequest(const userver::server::http::HttpRequest &reques
     auto offset_parsed = Utils::ParseIntArg(request.GetArg("offset"));
     int offset = offset_parsed.value_or(0);
 
+    if (const auto cached_response = cache_.GetDirectoryList(owner_id, parent_id, limit, offset)) {
+        return *cached_response;
+    }
+
     Repositories::DirectoryListParams params{
         .parent_id = parent_id,
         .limit = limit,
@@ -55,11 +60,14 @@ ListHandler::HandleTypedRequest(const userver::server::http::HttpRequest &reques
             .is_root = dir.is_root});
     }
 
-    return Response{
+    Response response{
         .items = std::move(items),
         .total = result.total,
         .limit = result.limit,
         .offset = result.offset};
+
+    cache_.SetDirectoryList(owner_id, parent_id, limit, offset, response);
+    return response;
 }
 
 } // namespace Handlers

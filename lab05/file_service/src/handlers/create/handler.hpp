@@ -6,6 +6,7 @@
 #include <userver/server/http/http_status.hpp>
 #include <userver/utils/boost_uuid4.hpp>
 
+#include "cache/file_cache.hpp"
 #include "handlers/base_handler.hpp"
 #include "repositories/file_repository.hpp"
 #include "schemas/openapi.hpp"
@@ -31,6 +32,7 @@ class CreateHandler final
                                        userver::server::request::RequestContext &context) const override;
 
   private:
+    const Cache::FileCache& cache_;
     std::shared_ptr<Repositories::IFileRepository> file_repository_;
 };
 

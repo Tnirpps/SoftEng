@@ -110,8 +110,10 @@ components_manager:
 
         directory-repository: {}
 
-        directory-files-cache:
-            ttl-seconds: $directory-files-cache-ttl-seconds
+        directory-response-cache:
+            directory-ttl-seconds: $directory-cache-ttl-seconds
+            directory-list-ttl-seconds: $directory-list-cache-ttl-seconds
+            directory-files-ttl-seconds: $directory-files-cache-ttl-seconds
 
         directory-database:
             dbconnection: $postgress-connection

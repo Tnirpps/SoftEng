@@ -9,6 +9,7 @@ namespace Handlers {
 GetHandler::GetHandler(const userver::components::ComponentConfig &config,
                        const userver::components::ComponentContext &context)
     : TypedHandler(config, context)
+    , cache_(context.FindComponent<Cache::FileCacheComponent>().GetCache())
     , file_repository_(context.FindComponent<Repositories::FileComponent>().GetRepository()) {
 }
 
@@ -27,6 +28,10 @@ GetHandler::HandleTypedRequest(const userver::server::http::HttpRequest &request
         return Error400("File ID is required");
     }
 
+    if (const auto cached_response = cache_.GetFile(owner_id, file_id)) {
+        return *cached_response;
+    }
+
     auto result = file_repository_->GetFile(file_id);
 
     if (!result.has_value()) {
@@ -40,7 +45,11 @@ GetHandler::HandleTypedRequest(const userver::server::http::HttpRequest &request
 
     const auto &file = result.value();
 
-    return Response{
+    if (file.owner_id != owner_id) {
+        return Error404("File not found");
+    }
+
+    Response response{
         .id = userver::utils::BoostUuidFromString(file.id),
         .name = file.name,
         .size = static_cast<int>(file.size),
@@ -50,6 +59,9 @@ GetHandler::HandleTypedRequest(const userver::server::http::HttpRequest &request
         .created_at = file.created_at,
         .updated_at = file.updated_at,
         .status = Gen::openapi::File::Status::kAvailable};
+
+    cache_.SetFile(owner_id, file_id, response);
+    return response;
 }
 
 } // namespace Handlers

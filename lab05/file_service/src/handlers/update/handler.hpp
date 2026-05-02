@@ -5,6 +5,7 @@
 #include <userver/server/handlers/http_handler_json_base.hpp>
 #include <userver/server/http/http_status.hpp>
 
+#include "cache/file_cache.hpp"
 #include "handlers/base_handler.hpp"
 #include "repositories/file_repository.hpp"
 #include "schemas/openapi.hpp"
@@ -30,6 +31,7 @@ class UpdateHandler final
                                        userver::server::request::RequestContext &context) const override;
 
   private:
+    const Cache::FileCache& cache_;
     std::shared_ptr<Repositories::IFileRepository> file_repository_;
 };
 

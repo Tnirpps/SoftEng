@@ -9,6 +9,7 @@ namespace Handlers {
 MoveHandler::MoveHandler(const userver::components::ComponentConfig &config,
                          const userver::components::ComponentContext &context)
     : TypedJsonHandler(config, context)
+    , cache_(context.FindComponent<Cache::DirectoryCacheComponent>().GetCache())
     , directory_repository_(context.FindComponent<Repositories::DirectoryComponent>().GetRepository()) {
 }
 
@@ -33,6 +34,15 @@ MoveHandler::HandleTypedRequest(const userver::server::http::HttpRequest &reques
         new_parent_id = userver::utils::ToString(body.new_parent_id.value());
     }
 
+    std::optional<std::string> old_parent_id;
+    if (const auto existing_directory = directory_repository_->GetDirectory(directory_id);
+        existing_directory.has_value() &&
+        existing_directory->owner_uuid == userver::utils::BoostUuidFromString(owner_id)) {
+        if (existing_directory->parent_uuid) {
+            old_parent_id = userver::utils::ToString(*existing_directory->parent_uuid);
+        }
+    }
+
     auto result = directory_repository_->MoveDirectory(directory_id, new_parent_id, owner_id);
 
     if (!result.has_value()) {
@@ -51,6 +61,11 @@ MoveHandler::HandleTypedRequest(const userver::server::http::HttpRequest &reques
     }
 
     const auto &dir = result.value();
+
+    cache_.InvalidateDirectory(owner_id, directory_id);
+    cache_.InvalidateDirectoryList(owner_id, old_parent_id);
+    cache_.InvalidateDirectoryList(
+        owner_id, dir.parent_uuid ? std::optional(userver::utils::ToString(*dir.parent_uuid)) : std::nullopt);
 
     return Response{
         .id = dir.uuid,

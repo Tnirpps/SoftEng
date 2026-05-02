@@ -10,7 +10,7 @@ namespace Handlers {
 FilesListHandler::FilesListHandler(const userver::components::ComponentConfig &config,
                                    const userver::components::ComponentContext &context)
     : TypedHandler(config, context)
-    , files_cache_(context.FindComponent<Cache::DirectoryFilesCacheComponent>().GetCache())
+    , cache_(context.FindComponent<Cache::DirectoryCacheComponent>().GetCache())
     , directory_repository_(context.FindComponent<Repositories::DirectoryComponent>().GetRepository()) {
 }
 
@@ -35,7 +35,7 @@ FilesListHandler::HandleTypedRequest(const userver::server::http::HttpRequest &r
     auto offset_parsed = Utils::ParseIntArg(request.GetArg("offset"));
     int offset = offset_parsed.value_or(0);
 
-    if (const auto cached_response = files_cache_.Get(owner_id, directory_id, limit, offset)) {
+    if (const auto cached_response = cache_.GetDirectoryFiles(owner_id, directory_id, limit, offset)) {
         return *cached_response;
     }
 
@@ -73,7 +73,7 @@ FilesListHandler::HandleTypedRequest(const userver::server::http::HttpRequest &r
         .limit = result.limit,
         .offset = result.offset};
 
-    files_cache_.Set(owner_id, directory_id, limit, offset, response);
+    cache_.SetDirectoryFiles(owner_id, directory_id, limit, offset, response);
     return response;
 }
 

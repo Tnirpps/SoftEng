@@ -9,6 +9,7 @@ namespace Handlers {
 UpdateHandler::UpdateHandler(const userver::components::ComponentConfig &config,
                              const userver::components::ComponentContext &context)
     : TypedJsonHandler(config, context)
+    , cache_(context.FindComponent<Cache::DirectoryCacheComponent>().GetCache())
     , directory_repository_(context.FindComponent<Repositories::DirectoryComponent>().GetRepository()) {
 }
 
@@ -42,6 +43,10 @@ UpdateHandler::HandleTypedRequest(const userver::server::http::HttpRequest &requ
     }
 
     const auto &dir = result.value();
+
+    cache_.InvalidateDirectory(owner_id, directory_id);
+    cache_.InvalidateDirectoryList(
+        owner_id, dir.parent_uuid ? std::optional(userver::utils::ToString(*dir.parent_uuid)) : std::nullopt);
 
     return Response{
         .id = dir.uuid,

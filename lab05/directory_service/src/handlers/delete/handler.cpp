@@ -10,6 +10,7 @@ namespace Handlers {
 DeleteHandler::DeleteHandler(const userver::components::ComponentConfig &config,
                              const userver::components::ComponentContext &context)
     : TypedHandler(config, context)
+    , cache_(context.FindComponent<Cache::DirectoryCacheComponent>().GetCache())
     , directory_repository_(context.FindComponent<Repositories::DirectoryComponent>().GetRepository()) {
 }
 
@@ -29,6 +30,15 @@ DeleteHandler::HandleTypedRequest(const userver::server::http::HttpRequest &requ
     }
 
     bool recursive = Utils::GetBoolArg(request.GetArg("recursive"), false);
+    std::optional<std::string> parent_id_for_invalidation;
+
+    if (const auto existing_directory = directory_repository_->GetDirectory(directory_id);
+        existing_directory.has_value() &&
+        existing_directory->owner_uuid == userver::utils::BoostUuidFromString(owner_id)) {
+        if (existing_directory->parent_uuid) {
+            parent_id_for_invalidation = userver::utils::ToString(*existing_directory->parent_uuid);
+        }
+    }
 
     auto result = directory_repository_->DeleteDirectory(directory_id, recursive, owner_id);
 
@@ -42,6 +52,10 @@ DeleteHandler::HandleTypedRequest(const userver::server::http::HttpRequest &requ
             return Error500("Internal server error");
         }
     }
+
+    cache_.InvalidateDirectory(owner_id, directory_id);
+    cache_.InvalidateDirectoryList(owner_id, parent_id_for_invalidation);
+    cache_.InvalidateDirectoryFiles(owner_id, directory_id);
 
     return Response{
         .message = "Directory successfully deleted"};

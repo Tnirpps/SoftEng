@@ -7,9 +7,13 @@
 #include <userver/server/handlers/ping.hpp>
 #include <userver/server/handlers/tests_control.hpp>
 #include <userver/storages/mongo/component.hpp>
+#include <userver/storages/redis/component.hpp>
+#include <userver/storages/secdist/component.hpp>
+#include <userver/storages/secdist/provider_component.hpp>
 #include <userver/testsuite/testsuite_support.hpp>
 #include <userver/utils/daemon_run.hpp>
 
+#include "cache/file_cache.hpp"
 #include "handlers/create/handler.hpp"
 #include "handlers/delete/handler.hpp"
 #include "handlers/get/handler.hpp"
@@ -24,12 +28,16 @@ int main(int argc, char *argv[]) {
                               .Append<userver::components::TestsuiteSupport>()
                               .AppendComponentList(userver::clients::http::ComponentList())
                               .Append<userver::clients::dns::Component>()
+                              .Append<userver::components::Secdist>()
+                              .Append<userver::components::DefaultSecdistProvider>()
+                              .Append<userver::components::Redis>("directory-cache")
                               .Append<userver::server::handlers::TestsControl>()
                               .Append<userver::components::Mongo>("mongo-files")
                               .Append<Handlers::CreateHandler>()
                               .Append<Handlers::GetHandler>()
                               .Append<Handlers::UpdateHandler>()
                               .Append<Handlers::DeleteHandler>()
+                              .Append<Cache::FileCacheComponent>()
                               .Append<Repositories::FileComponent>()
                               .Append<Auth::JwtCredentials>()
                               .Append<Middlewares::AuthMiddlewareFactory>()

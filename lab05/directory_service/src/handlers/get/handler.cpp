@@ -9,6 +9,7 @@ namespace Handlers {
 GetHandler::GetHandler(const userver::components::ComponentConfig &config,
                        const userver::components::ComponentContext &context)
     : TypedHandler(config, context)
+    , cache_(context.FindComponent<Cache::DirectoryCacheComponent>().GetCache())
     , directory_repository_(context.FindComponent<Repositories::DirectoryComponent>().GetRepository()) {
 }
 
@@ -27,6 +28,10 @@ GetHandler::HandleTypedRequest(const userver::server::http::HttpRequest &request
         return Error400("Directory ID is required");
     }
 
+    if (const auto cached_response = cache_.GetDirectory(owner_id, directory_id)) {
+        return *cached_response;
+    }
+
     auto result = directory_repository_->GetDirectory(directory_id);
 
     if (!result.has_value()) {
@@ -39,7 +44,7 @@ GetHandler::HandleTypedRequest(const userver::server::http::HttpRequest &request
         return Error404("Directory not found");
     }
 
-    return Response{
+    Response response{
         .id = dir.uuid,
         .name = dir.name,
         .parent_id = dir.parent_uuid,
@@ -47,6 +52,9 @@ GetHandler::HandleTypedRequest(const userver::server::http::HttpRequest &request
         .created_at = userver::utils::datetime::TimePointTz(dir.created_at),
         .updated_at = userver::utils::datetime::TimePointTz(dir.updated_at),
         .is_root = dir.is_root};
+
+    cache_.SetDirectory(owner_id, directory_id, response);
+    return response;
 }
 
 } // namespace Handlers
