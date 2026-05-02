@@ -6,4 +6,6 @@ is-testing: true
 
 server-port: 8082
 
+directory-write-rps: 100000
+
 postgress-connection: postgresql://postgres:postgres@localhost:5432/directory_service

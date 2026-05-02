@@ -44,7 +44,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: madisk_user_service
-    command: ["./user_service/bin/user_service", "-c", "./user_service/configs/static_config.yaml", "--config_vars", "./user_service/configs/config_vars.testing.yaml"]
+    command: ["./user_service/bin/user_service", "-c", "./user_service/configs/static_config.yaml", "--config_vars", "./user_service/configs/config_vars.docker.yaml"]
     ports:
       - "8081:8080"
     environment:
@@ -79,7 +79,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: madisk_directory_service
-    command: ["./directory_service/bin/directory_service", "-c", "./directory_service/configs/static_config.yaml", "--config_vars", "./directory_service/configs/config_vars.testing.yaml"]
+    command: ["./directory_service/bin/directory_service", "-c", "./directory_service/configs/static_config.yaml", "--config_vars", "./directory_service/configs/config_vars.docker.yaml"]
     ports:
       - "8082:8080"
     environment:

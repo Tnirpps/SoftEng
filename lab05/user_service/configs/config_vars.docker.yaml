@@ -1,0 +1,12 @@
+worker-threads: 4
+worker-fs-threads: 2
+logger-level: info
+
+is-testing: false
+
+server-port: 8080
+
+user-registration-rps: 2
+user-login-rps: 5
+
+postgress-connection: postgresql://postgres:postgres@postgres:5432/user_service

@@ -46,11 +46,13 @@ components_manager:
             path: /v1/users
             method: POST,OPTIONS
             task_processor: main-task-processor
+            max_requests_per_second: $user-registration-rps
 
         handler-user-login:
             path: /v1/users/login
             method: POST,OPTIONS
             task_processor: main-task-processor
+            max_requests_per_second: $user-login-rps
 
         handler-user-search:
             path: /v1/users/search

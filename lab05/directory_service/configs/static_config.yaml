@@ -53,6 +53,7 @@ components_manager:
             path: /v1/directories
             method: POST
             task_processor: main-task-processor
+            max_requests_per_second: $directory-write-rps
             middlewares:
                 pipeline-builder: protected-handler-pipeline-builder
 
@@ -67,6 +68,7 @@ components_manager:
             path: /v1/directories/{directory_id}
             method: PUT
             task_processor: main-task-processor
+            max_requests_per_second: $directory-write-rps
             middlewares:
                 pipeline-builder: protected-handler-pipeline-builder
 
@@ -74,6 +76,7 @@ components_manager:
             path: /v1/directories/{directory_id}
             method: DELETE
             task_processor: main-task-processor
+            max_requests_per_second: $directory-write-rps
             middlewares:
                 pipeline-builder: protected-handler-pipeline-builder
 
@@ -81,6 +84,7 @@ components_manager:
             path: /v1/directories/{directory_id}/move
             method: POST
             task_processor: main-task-processor
+            max_requests_per_second: $directory-write-rps
             middlewares:
                 pipeline-builder: protected-handler-pipeline-builder
 

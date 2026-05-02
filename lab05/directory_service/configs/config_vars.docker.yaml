@@ -1,0 +1,11 @@
+worker-threads: 4
+worker-fs-threads: 2
+logger-level: info
+
+is-testing: false
+
+server-port: 8080
+
+directory-write-rps: 10
+
+postgress-connection: postgresql://postgres:postgres@postgres:5432/directory_service
