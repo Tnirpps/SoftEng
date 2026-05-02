@@ -18,6 +18,10 @@ components_manager:
                     file_path: '@stderr'
                     level: $logger-level
                     overflow_behavior: discard
+        default-secdist-provider:
+            config: $secdist-path
+            missing-ok: true
+            environment-secrets-key: SECDIST_CONFIG
         dynamic-config: {}
         testsuite-support: {}
 
@@ -28,6 +32,15 @@ components_manager:
 
         dns-client:
             fs-task-processor: fs-task-processor
+
+        directory-cache:
+            groups:
+              - config_name: directory-cache
+                db: directory-cache
+            subscribe_groups: []
+            thread_pools:
+                redis_thread_pool_size: 8
+                sentinel_thread_pool_size: 1
 
         tests-control:
             load-enabled: $is-testing
@@ -96,6 +109,9 @@ components_manager:
                 pipeline-builder: protected-handler-pipeline-builder
 
         directory-repository: {}
+
+        directory-files-cache:
+            ttl-seconds: $directory-files-cache-ttl-seconds
 
         directory-database:
             dbconnection: $postgress-connection

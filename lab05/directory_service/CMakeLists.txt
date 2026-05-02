@@ -12,6 +12,7 @@ target_link_libraries(directory_service_objs
         userver::core
         userver::s3api
         userver::postgresql
+        userver::redis
         common
 )
 

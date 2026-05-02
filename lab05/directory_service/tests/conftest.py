@@ -9,6 +9,7 @@ from testsuite.databases.pgsql import discover
 pytest_plugins = [
     "pytest_userver.plugins.core",
     "pytest_userver.plugins.postgresql",
+    "pytest_userver.plugins.redis",
 ]
 
 
@@ -71,6 +72,22 @@ def pgsql_local(service_source_dir, pgsql_local_create):
     return pgsql_local_create(list(databases.values()))
 
 
+@pytest.fixture(scope='session')
+def service_env(redis_sentinels):
+    secdist_config = {
+        "redis_settings": {
+            "directory-cache": {
+                "password": "",
+                "database_index": 0,
+                "sentinels": redis_sentinels,
+                "shards": [{"name": "test_master0"}],
+            }
+        }
+    }
+
+    return {"SECDIST_CONFIG": json.dumps(secdist_config)}
+
+
 @pytest.fixture
 def test_user():
     """Фикстура с данными тестового пользователя."""
@@ -84,9 +101,10 @@ def test_user():
 
 
 @pytest.fixture(autouse=True)
-async def clean_directories(service_client):
+async def clean_directories(service_client, redis_store):
     """Фикстура для очистки базы директорий перед каждым тестом."""
     await service_client.run_task('delete-all-directories')
+    redis_store.flushdb()
     yield
 
 

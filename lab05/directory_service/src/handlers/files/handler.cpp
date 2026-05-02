@@ -10,6 +10,7 @@ namespace Handlers {
 FilesListHandler::FilesListHandler(const userver::components::ComponentConfig &config,
                                    const userver::components::ComponentContext &context)
     : TypedHandler(config, context)
+    , files_cache_(context.FindComponent<Cache::DirectoryFilesCacheComponent>().GetCache())
     , directory_repository_(context.FindComponent<Repositories::DirectoryComponent>().GetRepository()) {
 }
 
@@ -33,6 +34,10 @@ FilesListHandler::HandleTypedRequest(const userver::server::http::HttpRequest &r
 
     auto offset_parsed = Utils::ParseIntArg(request.GetArg("offset"));
     int offset = offset_parsed.value_or(0);
+
+    if (const auto cached_response = files_cache_.Get(owner_id, directory_id, limit, offset)) {
+        return *cached_response;
+    }
 
     // First check if directory exists and belongs to user
     auto dir_result = directory_repository_->GetDirectory(directory_id);
@@ -62,11 +67,14 @@ FilesListHandler::HandleTypedRequest(const userver::server::http::HttpRequest &r
             .status = static_cast<Gen::openapi::FileMetadata::Status>(Models::FileStatus::Pending)}); // file.status)});
     }
 
-    return Response{
+    Response response{
         .items = std::move(items),
         .total = result.total,
         .limit = result.limit,
         .offset = result.offset};
+
+    files_cache_.Set(owner_id, directory_id, limit, offset, response);
+    return response;
 }
 
 } // namespace Handlers

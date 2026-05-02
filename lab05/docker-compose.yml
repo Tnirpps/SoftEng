@@ -39,6 +39,19 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7
+    container_name: madisk_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - madisk_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   user_service:
     build:
       context: .
@@ -101,6 +114,8 @@ services:
       postgres:
         condition: service_healthy
       user_service:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]

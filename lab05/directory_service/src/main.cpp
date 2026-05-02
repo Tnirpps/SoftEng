@@ -7,9 +7,13 @@
 #include <userver/server/handlers/ping.hpp>
 #include <userver/server/handlers/tests_control.hpp>
 #include <userver/storages/postgres/component.hpp>
+#include <userver/storages/redis/component.hpp>
+#include <userver/storages/secdist/component.hpp>
+#include <userver/storages/secdist/provider_component.hpp>
 #include <userver/testsuite/testsuite_support.hpp>
 #include <userver/utils/daemon_run.hpp>
 
+#include "cache/directory_files_cache.hpp"
 #include "handlers/create/handler.hpp"
 #include "handlers/delete/handler.hpp"
 #include "handlers/files/handler.hpp"
@@ -27,6 +31,9 @@ int main(int argc, char *argv[]) {
                               .Append<userver::components::TestsuiteSupport>()
                               .AppendComponentList(userver::clients::http::ComponentList())
                               .Append<userver::clients::dns::Component>()
+                              .Append<userver::components::Secdist>()
+                              .Append<userver::components::DefaultSecdistProvider>()
+                              .Append<userver::components::Redis>("directory-cache")
                               .Append<userver::server::handlers::TestsControl>()
                               .Append<Handlers::CreateHandler>()
                               .Append<Handlers::ListHandler>()
@@ -35,6 +42,7 @@ int main(int argc, char *argv[]) {
                               .Append<Handlers::DeleteHandler>()
                               .Append<Handlers::MoveHandler>()
                               .Append<Handlers::FilesListHandler>()
+                              .Append<Cache::DirectoryFilesCacheComponent>()
                               .Append<Repositories::DirectoryComponent>()
                               .Append<userver::components::Postgres>("directory-database")
                               .Append<Auth::JwtCredentials>()
