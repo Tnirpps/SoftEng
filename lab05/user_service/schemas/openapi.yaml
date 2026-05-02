@@ -1,0 +1,236 @@
+openapi: 3.0.3
+info:
+  title: MaDisk API
+  version: 1.0.0
+  description: REST API для сервиса хранения файлов и папок
+
+servers:
+  - url: /v1
+
+paths:
+  /users:
+    post:
+      summary: Создать нового пользователя
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '201':
+          description: Пользователь успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreateResponse'
+        '400':
+          description: Некорректные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Пользователь уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/login:
+    post:
+      summary: Аутентификация пользователя
+      operationId: userLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+      responses:
+        '200':
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserLoginResponse'
+        '401':
+          description: Неверные учётные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/search:
+    get:
+      summary: Поиск пользователя по маске ника
+      operationId: searchUser
+      parameters:
+        - name: pattern
+          in: query
+          required: true
+          description: Маска ника для поиска (поддерживает % и _)
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 20
+      responses:
+        '200':
+          description: Результат поиска
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSearchResponse'
+        '400':
+          description: Некорректные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Login:
+      type: string
+      description: Уникальный логин пользователя
+      minLength: 4
+      maxLength: 20
+
+    Password:
+      type: string
+      description: Пароль пользователя
+      minLength: 6
+      maxLength: 40
+
+    UserCreateResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - uuid
+        - login
+        - first_name
+        - last_name
+        - created_at
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        login:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    UserCreateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - login
+        - password
+        - first_name
+        - last_name
+      properties:
+        login:
+          $ref: '#/components/schemas/Login'
+        password:
+          $ref: '#/components/schemas/Password'
+        first_name:
+          type: string
+          minLength: 2
+          maxLength: 20
+        last_name:
+          type: string
+          minLength: 2
+          maxLength: 20
+
+    UserLoginRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - login
+        - password
+      properties:
+        login:
+          $ref: '#/components/schemas/Login'
+        password:
+          $ref: '#/components/schemas/Password'
+
+    UserLoginResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - login
+        - token
+      properties:
+        login:
+          type: string
+        token:
+          type: string
+          description: JWT токен
+    
+    UserSearchResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - found
+      properties:
+        found:
+          type: boolean
+          description: true если найден хотя бы один пользователь с подходящей маской
+        user:
+          type: object
+          description: Информация о найденном пользователе (присутствует только если found=true)
+          required:
+            - uuid
+            - login
+            - first_name
+            - last_name
+            - created_at
+          properties:
+            uuid:
+              type: string
+              format: uuid
+            login:
+              type: string
+            first_name:
+              type: string
+            last_name:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+
+    ErrorResponse:
+      type: object
+      additionalProperties: true
+      required:
+        - message
+        - status
+      properties:
+        message:
+          type: string
+        status:
+          type: integer
