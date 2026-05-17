@@ -10,6 +10,7 @@ DeleteHandler::DeleteHandler(const userver::components::ComponentConfig &config,
                              const userver::components::ComponentContext &context)
     : TypedHandler(config, context)
     , cache_(context.FindComponent<Cache::FileCacheComponent>().GetCache())
+    , event_publisher_(context.FindComponent<Events::FileEventPublisher>())
     , file_repository_(context.FindComponent<Repositories::FileComponent>().GetRepository()) {
 }
 
@@ -51,9 +52,7 @@ DeleteHandler::HandleTypedRequest(const userver::server::http::HttpRequest &requ
     }
 
     cache_.InvalidateFile(owner_id, file_id);
-    if (directory_id_for_invalidation.has_value()) {
-        cache_.InvalidateDirectoryFiles(owner_id, *directory_id_for_invalidation);
-    }
+    event_publisher_.PublishFileDeleted(file_id, owner_id, directory_id_for_invalidation);
 
     return Response{
         .message = "File successfully deleted"};

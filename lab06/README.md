@@ -1,87 +1,68 @@
-# MaDisk, ЛР5
+# MaDisk, ЛР6
 
-В этой версии проекта мы занялись не новыми HTTP-методами, а поведением системы под нагрузкой. Для записи остался rate limiting, а для чтения добавили Redis-кэш. Идея простая: не ходить в базу каждый раз за одними и теми же данными, если их можно быстро отдать из памяти.
+В этой версии проекта добавлена Event-Driven архитектура на RabbitMQ. Основной реализованный сценарий: `file_service` публикует события об изменении файлов, а `directory_service` потребляет эти события и обновляет read-модель списка файлов в директории через инвалидацию Redis-кэша.
 
-## Что теперь кешируется
+## Что добавлено
 
-- `GET /v1/directories/{directory_id}`
-- `GET /v1/directories?parent_id=&limit=&offset=`
-- `GET /v1/directories/{directory_id}/files`
-- `GET /v1/files/{file_id}`
+- RabbitMQ в `docker-compose.yml`.
+- Producer `file-event-publisher` в `file_service`.
+- Consumer `file-events-consumer` в `directory_service`.
+- Direct exchange `madisk.events`.
+- Очередь `directory_service.file_events`.
+- События `FileCreated`, `FileUpdated`, `FileDeleted`.
+- Документация Event-Driven архитектуры и каталог событий.
 
-Кэш работает по схеме `Cache-Aside`: сначала сервис пробует взять готовый ответ из Redis, а если записи нет, читает данные из базы, формирует обычный ответ и кладет его в Redis на некоторое время.
+## Поток событий
 
-Используем такие TTL:
+1. Клиент вызывает write-команду в `file_service`: создать, обновить или удалить файл.
+2. `file_service` успешно меняет состояние файла в MongoDB.
+3. `file_service` публикует событие в RabbitMQ exchange `madisk.events`.
+4. RabbitMQ доставляет событие в очередь `directory_service.file_events`.
+5. `directory_service` получает событие и инвалидирует Redis read-модель `GET /v1/directories/{directory_id}/files`.
+6. Следующий read-запрос пересобирает актуальный список файлов.
 
-- директория по id: `300` секунд
-- список директорий: `60` секунд
-- список файлов в папке: `30` секунд
-- файл по id: `300` секунд
+## RabbitMQ
 
-## Где и как инвалидируется кэш
+RabbitMQ Management UI доступен на:
 
-С директориями все довольно прямолинейно:
+- `http://localhost:15672`
+- login: `guest`
+- password: `guest`
 
-- после `POST /v1/directories` сбрасывается кэш списка у родительской папки;
-- после `PUT /v1/directories/{directory_id}` сбрасывается кэш самой директории и списка, в котором она находится;
-- после `DELETE /v1/directories/{directory_id}` сбрасывается кэш директории, список родителя и кэш содержимого удаленной папки;
-- после `POST /v1/directories/{directory_id}/move` сбрасывается кэш самой директории и списки у старого и нового родителя.
+AMQP endpoint:
 
-С файлами:
+- `localhost:5672`
 
-- после `PUT /v1/files/{file_id}` сбрасывается кэш файла и кэш списка файлов той папки, где он лежит;
-- после `DELETE /v1/files/{file_id}` делается то же самое;
-- после `POST /v1/files` сбрасывается кэш списка файлов родительской папки.
+Routing keys:
 
-Для списков мы не удаляем все ключи вручную. Вместо этого используется version-key в Redis: когда данные меняются, версия увеличивается, и следующие запросы автоматически начинают писать и читать уже новые cache key. Это удобнее, чем перебирать все варианты `limit/offset`.
-
-## Rate limiting
-
-Rate limiting остался встроенным, средствами `userver`, без дополнительного middleware.
-
-Лимиты такие:
-
-- `POST /v1/users` — `2 req/s`
-- `POST /v1/users/login` — `5 req/s`
-- `POST /v1/directories` — `10 req/s`
-- `PUT /v1/directories/{directory_id}` — `10 req/s`
-- `DELETE /v1/directories/{directory_id}` — `10 req/s`
-- `POST /v1/directories/{directory_id}/move` — `10 req/s`
-- `POST /v1/files` — `10 req/s`
-- `PUT /v1/files/{file_id}` — `10 req/s`
-- `DELETE /v1/files/{file_id}` — `10 req/s`
-
-Read-endpoints специально не ограничивались, потому что именно их мы сейчас стараемся ускорять через кэш.
-
-## Что поменялось по инфраструктуре
-
-- Redis подключен к `directory_service`;
-- Redis подключен к `file_service`;
-- оба сервиса используют один и тот же Redis, поэтому `file_service` может инвалидировать кэш списка файлов, который хранит `directory_service`;
-- в конфиги добавлены `secdist` и TTL-параметры;
-- в `docker-compose.yml` добавлен `redis` и зависимости сервисов от него.
+- `file.created`
+- `file.updated`
+- `file.deleted`
 
 ## Запуск
 
-Если стенд поднимается через Docker Compose, сервисы ожидаются такие:
+```bash
+cd lab06
+docker compose up --build
+```
 
-- `user_service` — `localhost:8081`
-- `directory_service` — `localhost:8082`
-- `file_service` — `localhost:8083`
-- `redis` — `localhost:6379`
+Ожидаемые HTTP-порты:
 
-Локально для Redis используются:
+- `user_service` - `localhost:8081`
+- `directory_service` - `localhost:8082`
+- `file_service` - `localhost:8083`
+- RabbitMQ Management - `localhost:15672`
 
-- [directory_service/configs/secure_data.json](/home/egortest/Desktop/MyProject/SoftEng/lab05/directory_service/configs/secure_data.json:1)
-- [file_service/configs/secure_data.json](/home/egortest/Desktop/MyProject/SoftEng/lab05/file_service/configs/secure_data.json:1)
+## Ручная проверка
 
-Для Docker:
+1. Зарегистрировать пользователя через `POST /v1/users`.
+2. Выполнить login через `POST /v1/users/login` и получить JWT.
+3. Создать директорию через `POST /v1/directories`.
+4. Создать файл в этой директории через `POST /v1/files`.
+5. Проверить в логах `file_service`, что событие опубликовано.
+6. Проверить в логах `directory_service`, что событие получено и read-модель списка файлов инвалидирована.
 
-- [directory_service/configs/secure_data.docker.json](/home/egortest/Desktop/MyProject/SoftEng/lab05/directory_service/configs/secure_data.docker.json:1)
-- [file_service/configs/secure_data.docker.json](/home/egortest/Desktop/MyProject/SoftEng/lab05/file_service/configs/secure_data.docker.json:1)
+## Документация
 
-## Что важно понимать
-
-Это не финальная кэш-подсистема на весь проект, а уже рабочая база для нее. Redis теперь встроен сразу в оба сервиса, основные read-endpoints уже кешируются, а инвалидация сделана там, где она реально нужна для текущего набора операций.
-
-Если потом захотим расширять это дальше, логика уже лежит в отдельных cache-компонентах, а не размазана по хендлерам.
+- [event_driven_design.md](/home/egortest/Desktop/MyProject/SoftEng/lab06/event_driven_design.md:1) - описание Event-Driven архитектуры, RabbitMQ и CQRS.
+- [event_catalog.md](/home/egortest/Desktop/MyProject/SoftEng/lab06/event_catalog.md:1) - каталог событий системы.

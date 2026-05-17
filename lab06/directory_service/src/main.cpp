@@ -4,6 +4,7 @@
 #include <userver/components/component_list.hpp>
 #include <userver/components/minimal_server_component_list.hpp>
 #include <userver/congestion_control/component.hpp>
+#include <userver/rabbitmq.hpp>
 #include <userver/server/handlers/ping.hpp>
 #include <userver/server/handlers/tests_control.hpp>
 #include <userver/storages/postgres/component.hpp>
@@ -14,6 +15,7 @@
 #include <userver/utils/daemon_run.hpp>
 
 #include "cache/directory_cache.hpp"
+#include "events/file_events_consumer.hpp"
 #include "handlers/create/handler.hpp"
 #include "handlers/delete/handler.hpp"
 #include "handlers/files/handler.hpp"
@@ -34,6 +36,7 @@ int main(int argc, char *argv[]) {
                               .Append<userver::components::Secdist>()
                               .Append<userver::components::DefaultSecdistProvider>()
                               .Append<userver::components::Redis>("directory-cache")
+                              .Append<userver::components::RabbitMQ>("events-rabbit")
                               .Append<userver::server::handlers::TestsControl>()
                               .Append<Handlers::CreateHandler>()
                               .Append<Handlers::ListHandler>()
@@ -42,6 +45,7 @@ int main(int argc, char *argv[]) {
                               .Append<Handlers::DeleteHandler>()
                               .Append<Handlers::MoveHandler>()
                               .Append<Handlers::FilesListHandler>()
+                              .Append<Events::FileEventsConsumer>()
                               .Append<Cache::DirectoryCacheComponent>()
                               .Append<Repositories::DirectoryComponent>()
                               .Append<userver::components::Postgres>("directory-database")

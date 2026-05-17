@@ -1,4 +1,13 @@
 {
+  "rabbitmq_settings": {
+    "events-rabbit": {
+      "hosts": ["localhost"],
+      "port": 5672,
+      "login": "guest",
+      "password": "guest",
+      "vhost": "/"
+    }
+  },
   "redis_settings": {
     "directory-cache": {
       "password": "",

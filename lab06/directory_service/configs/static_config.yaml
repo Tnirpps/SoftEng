@@ -42,6 +42,13 @@ components_manager:
                 redis_thread_pool_size: 8
                 sentinel_thread_pool_size: 1
 
+        events-rabbit:
+            secdist_alias: events-rabbit
+            min_pool_size: 2
+            max_pool_size: 8
+            max_in_flight_requests: 8
+            use_secure_connection: false
+
         tests-control:
             load-enabled: $is-testing
             path: /tests/{action}
@@ -114,6 +121,11 @@ components_manager:
             directory-ttl-seconds: $directory-cache-ttl-seconds
             directory-list-ttl-seconds: $directory-list-cache-ttl-seconds
             directory-files-ttl-seconds: $directory-files-cache-ttl-seconds
+
+        file-events-consumer:
+            rabbit_name: events-rabbit
+            queue: directory_service.file_events
+            prefetch_count: 8
 
         directory-database:
             dbconnection: $postgress-connection

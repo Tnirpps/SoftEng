@@ -13,6 +13,7 @@ target_link_libraries(directory_service_objs
         userver::s3api
         userver::postgresql
         userver::redis
+        userver::rabbitmq
         common
 )
 

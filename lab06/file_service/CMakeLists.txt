@@ -12,6 +12,7 @@ target_link_libraries(file_service_objs
         userver::core
         userver::mongo
         userver::redis
+        userver::rabbitmq
         common
 )
 

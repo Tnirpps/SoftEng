@@ -4,6 +4,7 @@
 #include <userver/components/component_list.hpp>
 #include <userver/components/minimal_server_component_list.hpp>
 #include <userver/congestion_control/component.hpp>
+#include <userver/rabbitmq.hpp>
 #include <userver/server/handlers/ping.hpp>
 #include <userver/server/handlers/tests_control.hpp>
 #include <userver/storages/mongo/component.hpp>
@@ -14,6 +15,7 @@
 #include <userver/utils/daemon_run.hpp>
 
 #include "cache/file_cache.hpp"
+#include "events/file_event_publisher.hpp"
 #include "handlers/create/handler.hpp"
 #include "handlers/delete/handler.hpp"
 #include "handlers/get/handler.hpp"
@@ -31,12 +33,14 @@ int main(int argc, char *argv[]) {
                               .Append<userver::components::Secdist>()
                               .Append<userver::components::DefaultSecdistProvider>()
                               .Append<userver::components::Redis>("directory-cache")
+                              .Append<userver::components::RabbitMQ>("events-rabbit")
                               .Append<userver::server::handlers::TestsControl>()
                               .Append<userver::components::Mongo>("mongo-files")
                               .Append<Handlers::CreateHandler>()
                               .Append<Handlers::GetHandler>()
                               .Append<Handlers::UpdateHandler>()
                               .Append<Handlers::DeleteHandler>()
+                              .Append<Events::FileEventPublisher>()
                               .Append<Cache::FileCacheComponent>()
                               .Append<Repositories::FileComponent>()
                               .Append<Auth::JwtCredentials>()

@@ -6,6 +6,7 @@
 #include <userver/server/http/http_status.hpp>
 
 #include "cache/file_cache.hpp"
+#include "events/file_event_publisher.hpp"
 #include "handlers/base_handler.hpp"
 #include "repositories/file_repository.hpp"
 #include "schemas/openapi.hpp"
@@ -29,6 +30,7 @@ class DeleteHandler final
 
   private:
     const Cache::FileCache& cache_;
+    const Events::FileEventPublisher& event_publisher_;
     std::shared_ptr<Repositories::IFileRepository> file_repository_;
 };
 
