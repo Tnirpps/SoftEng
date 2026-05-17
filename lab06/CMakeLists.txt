@@ -1,0 +1,19 @@
+cmake_minimum_required(VERSION 3.23)
+project(MaDisk LANGUAGES CXX)
+
+# Установки, которые нужны всем
+find_package(userver REQUIRED COMPONENTS core chaotic s3api postgresql mongo redis)
+find_package(nlohmann_json REQUIRED)
+find_package(jwt-cpp REQUIRED)
+find_package(mongoc-1.0 REQUIRED)
+
+# Подключаем userver окружение (он требует userver_setup_environment)
+userver_setup_environment()
+
+# Общая библиотека
+add_subdirectory(common)
+
+# Отдельные сервисы
+add_subdirectory(user_service)
+add_subdirectory(directory_service)
+add_subdirectory(file_service)

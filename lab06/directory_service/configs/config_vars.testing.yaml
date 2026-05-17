@@ -1,0 +1,15 @@
+worker-threads: 2
+worker-fs-threads: 2
+logger-level: debug
+
+is-testing: true
+
+server-port: 8082
+
+directory-write-rps: 100000
+directory-cache-ttl-seconds: 300
+directory-list-cache-ttl-seconds: 60
+directory-files-cache-ttl-seconds: 30
+secdist-path: ./directory_service/configs/secure_data.json
+
+postgress-connection: postgresql://postgres:postgres@localhost:5432/directory_service
