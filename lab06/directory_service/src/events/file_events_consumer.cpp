@@ -4,6 +4,7 @@
 #include <string>
 
 #include <userver/components/component_context.hpp>
+#include <userver/formats/json.hpp>
 #include <userver/formats/json/exception.hpp>
 #include <userver/formats/json/serialize.hpp>
 #include <userver/logging/log.hpp>
@@ -56,6 +57,8 @@ void FileEventsConsumer::Process(std::string message) {
                    << ", directory_id=" << directory_id;
     } catch (const userver::formats::json::Exception& ex) {
         LOG_WARNING() << "Failed to parse file event from RabbitMQ: " << ex.what();
+    } catch (const std::exception& ex) {
+        LOG_WARNING() << "Failed to process file event from RabbitMQ: " << ex.what();
     }
 }
 

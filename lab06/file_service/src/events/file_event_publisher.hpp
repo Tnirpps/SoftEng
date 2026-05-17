@@ -6,6 +6,7 @@
 #include <string_view>
 
 #include <userver/components/component_base.hpp>
+#include <userver/components/component_config.hpp>
 #include <userver/components/component_context.hpp>
 #include <userver/rabbitmq.hpp>
 

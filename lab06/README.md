@@ -1,43 +1,25 @@
 # MaDisk, ЛР6
 
-В этой версии проекта добавлена Event-Driven архитектура на RabbitMQ. Основной реализованный сценарий: `file_service` публикует события об изменении файлов, а `directory_service` потребляет эти события и обновляет read-модель списка файлов в директории через инвалидацию Redis-кэша.
+В этой лабораторной я добавил в проект событийное взаимодействие через RabbitMQ. До этого сервисы в основном общались синхронно и напрямую работали со своими хранилищами, а теперь часть изменений можно передавать как события.
 
-## Что добавлено
+Основной реализованный пример: `file_service` сообщает о создании, изменении и удалении файлов, а `directory_service` слушает эти события и инвалидирует read-модель списка файлов в директории.
+
+## Что появилось
 
 - RabbitMQ в `docker-compose.yml`.
-- Producer `file-event-publisher` в `file_service`.
-- Consumer `file-events-consumer` в `directory_service`.
-- Direct exchange `madisk.events`.
+- Producer в `file_service`: компонент `file-event-publisher`.
+- Consumer в `directory_service`: компонент `file-events-consumer`.
+- Exchange `madisk.events` типа `direct`.
 - Очередь `directory_service.file_events`.
 - События `FileCreated`, `FileUpdated`, `FileDeleted`.
-- Документация Event-Driven архитектуры и каталог событий.
 
-## Поток событий
+## Как это работает
 
-1. Клиент вызывает write-команду в `file_service`: создать, обновить или удалить файл.
-2. `file_service` успешно меняет состояние файла в MongoDB.
-3. `file_service` публикует событие в RabbitMQ exchange `madisk.events`.
-4. RabbitMQ доставляет событие в очередь `directory_service.file_events`.
-5. `directory_service` получает событие и инвалидирует Redis read-модель `GET /v1/directories/{directory_id}/files`.
-6. Следующий read-запрос пересобирает актуальный список файлов.
+Когда пользователь создает, переименовывает или удаляет файл, `file_service` сначала успешно меняет данные в MongoDB. После этого он публикует событие в RabbitMQ.
 
-## RabbitMQ
+`directory_service` подписан на file-события. Если событие относится к файлу внутри директории, сервис сбрасывает кэш списка файлов этой директории в Redis. Следующий запрос на чтение заново соберет актуальный список.
 
-RabbitMQ Management UI доступен на:
-
-- `http://localhost:15672`
-- login: `guest`
-- password: `guest`
-
-AMQP endpoint:
-
-- `localhost:5672`
-
-Routing keys:
-
-- `file.created`
-- `file.updated`
-- `file.deleted`
+Так получилось разделить write-часть и read-часть: запись остается в основных БД, а read-модель обновляется асинхронно через события.
 
 ## Запуск
 
@@ -46,23 +28,27 @@ cd lab06
 docker compose up --build
 ```
 
-Ожидаемые HTTP-порты:
+Сервисы:
 
-- `user_service` - `localhost:8081`
-- `directory_service` - `localhost:8082`
-- `file_service` - `localhost:8083`
-- RabbitMQ Management - `localhost:15672`
+- `user_service`: `http://localhost:8081`
+- `directory_service`: `http://localhost:8082`
+- `file_service`: `http://localhost:8083`
+- RabbitMQ Management UI: `http://localhost:15672`
 
-## Ручная проверка
+Для RabbitMQ Management:
+
+- login: `guest`
+- password: `guest`
+
+## Как проверить руками
 
 1. Зарегистрировать пользователя через `POST /v1/users`.
-2. Выполнить login через `POST /v1/users/login` и получить JWT.
+2. Выполнить login через `POST /v1/users/login`.
 3. Создать директорию через `POST /v1/directories`.
 4. Создать файл в этой директории через `POST /v1/files`.
-5. Проверить в логах `file_service`, что событие опубликовано.
-6. Проверить в логах `directory_service`, что событие получено и read-модель списка файлов инвалидирована.
+5. Посмотреть в логах, что `file_service` опубликовал событие, а `directory_service` его обработал.
 
 ## Документация
 
-- [event_driven_design.md](/home/egortest/Desktop/MyProject/SoftEng/lab06/event_driven_design.md:1) - описание Event-Driven архитектуры, RabbitMQ и CQRS.
-- [event_catalog.md](/home/egortest/Desktop/MyProject/SoftEng/lab06/event_catalog.md:1) - каталог событий системы.
+- [event_driven_design.md](/home/egortest/Desktop/MyProject/SoftEng/lab06/event_driven_design.md:1)
+- [event_catalog.md](/home/egortest/Desktop/MyProject/SoftEng/lab06/event_catalog.md:1)

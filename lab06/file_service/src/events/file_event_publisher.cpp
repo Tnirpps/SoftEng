@@ -44,14 +44,14 @@ void FileEventPublisher::PublishFileCreated(const std::string& file_id,
                                             const std::string& owner_id,
                                             const std::optional<std::string>& directory_id,
                                             const std::string& name) const {
-    Publish("FileCreated", std::string{kFileCreatedRoutingKey}, file_id, owner_id, directory_id, name);
+    Publish("FileCreated", std::string{kFileCreatedRoutingKey}, file_id, owner_id, directory_id, std::optional<std::string>{name});
 }
 
 void FileEventPublisher::PublishFileUpdated(const std::string& file_id,
                                             const std::string& owner_id,
                                             const std::optional<std::string>& directory_id,
                                             const std::string& name) const {
-    Publish("FileUpdated", std::string{kFileUpdatedRoutingKey}, file_id, owner_id, directory_id, name);
+    Publish("FileUpdated", std::string{kFileUpdatedRoutingKey}, file_id, owner_id, directory_id, std::optional<std::string>{name});
 }
 
 void FileEventPublisher::PublishFileDeleted(const std::string& file_id,

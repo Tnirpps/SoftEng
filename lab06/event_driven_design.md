@@ -1,29 +1,20 @@
-# Event-Driven архитектура MaDisk
+# Event-Driven архитектура
 
-## Контекст
+В этой лабораторной я добавил в MaDisk событийный обмен через RabbitMQ. Идея такая: не заставлять один сервис напрямую дергать другой после каждого изменения, а публиковать факт произошедшего изменения в брокер.
 
-MaDisk состоит из трех сервисов:
+В коде реализован самый понятный для проекта поток: события файлов. Когда `file_service` меняет файл, он публикует событие. `directory_service` получает его и сбрасывает read-модель списка файлов в директории.
 
-- `user_service` управляет пользователями и аутентификацией.
-- `directory_service` управляет деревом директорий и read-моделью списка файлов в директории.
-- `file_service` управляет файлами и хранит их данные в MongoDB.
+## События и команды
 
-В ЛР6 в систему добавлен брокер RabbitMQ. Основной реализованный поток: изменения файлов публикуются как события, а `directory_service` получает эти события и синхронизирует read-модель, которая используется для быстрых read-запросов.
+Команды - это действия пользователя:
 
-## Команды и события
+- создать файл;
+- переименовать файл;
+- удалить файл;
+- создать, изменить, переместить или удалить директорию;
+- зарегистрировать пользователя.
 
-Команды - это write-операции, которые меняют состояние системы:
-
-- `CreateFile` - HTTP `POST /v1/files`
-- `UpdateFile` - HTTP `PUT /v1/files/{file_id}`
-- `DeleteFile` - HTTP `DELETE /v1/files/{file_id}`
-- `CreateDirectory` - HTTP `POST /v1/directories`
-- `UpdateDirectory` - HTTP `PUT /v1/directories/{directory_id}`
-- `MoveDirectory` - HTTP `POST /v1/directories/{directory_id}/move`
-- `DeleteDirectory` - HTTP `DELETE /v1/directories/{directory_id}`
-- `RegisterUser` - HTTP `POST /v1/users`
-
-События - это уже произошедшие факты:
+События - это факты, которые произошли после успешной команды:
 
 - `FileCreated`
 - `FileUpdated`
@@ -34,71 +25,69 @@ MaDisk состоит из трех сервисов:
 - `DirectoryDeleted`
 - `UserRegistered`
 
-В коде ЛР6 реализованы file-события. Directory/user-события описаны в каталоге как часть целевой событийной модели проекта.
+В реализации ЛР6 я сделал file-события. Остальные события описаны в каталоге как часть общей модели системы.
 
 ## RabbitMQ
 
-Для обмена событиями используется RabbitMQ.
+Для брокера выбран RabbitMQ, потому что в `userver_samples` был готовый пример работы с ним.
 
-- Exchange: `madisk.events`
-- Тип exchange: `direct`
-- Очередь consumer: `directory_service.file_events`
-- Routing keys:
-  - `file.created`
-  - `file.updated`
-  - `file.deleted`
+Используется exchange:
 
-`file_service` является producer для file-событий. После успешной записи в MongoDB он публикует событие в `madisk.events`.
+```text
+madisk.events
+```
 
-`directory_service` является consumer. Он слушает очередь `directory_service.file_events`, привязанную к file routing keys, и при получении события инвалидирует read-модель списка файлов директории.
+Тип exchange:
+
+```text
+direct
+```
+
+Для file-событий используются routing keys:
+
+```text
+file.created
+file.updated
+file.deleted
+```
+
+`directory_service` слушает очередь:
+
+```text
+directory_service.file_events
+```
 
 ## Формат сообщения
 
-Сообщения передаются в JSON.
+Сообщение отправляется в JSON. Пример:
 
 ```json
 {
   "event_id": "uuid",
   "event_type": "FileCreated",
-  "occurred_at": "2026-05-17T12:00:00+0000",
+  "occurred_at": "datetime",
   "file_id": "uuid",
   "owner_id": "uuid",
   "directory_id": "uuid",
-  "name": "report.pdf"
+  "name": "notes.txt"
 }
 ```
 
-Для `FileDeleted` поле `name` не обязательно. Если файл находится вне директории, `directory_id` передается как `null`, и consumer не инвалидирует список файлов директории.
-
-## Гарантии доставки
-
-Выбрана гарантия `at-least-once`.
-
-- Producer использует reliable publish.
-- Consumer должен быть готов к повторной доставке сообщения.
-- Обработка file-событий идемпотентна: повторная инвалидация Redis read-модели не меняет бизнес-состояние и безопасна.
-
-Exactly-once не используется, потому что для текущей задачи она избыточна: событие не создает новые бизнес-сущности в consumer, а только сбрасывает кэш.
+Если файл не лежит в директории, `directory_id` будет `null`, и consumer просто пропустит такое событие.
 
 ## CQRS
 
-CQRS применим к MaDisk, потому что write-операции и read-операции имеют разный профиль нагрузки.
+CQRS здесь применяется в простом виде.
 
 Write-модель:
 
-- `file_service` пишет файлы в MongoDB.
-- `directory_service` пишет директории в PostgreSQL.
-- `user_service` пишет пользователей в PostgreSQL.
+- файлы пишутся в MongoDB;
+- директории и пользователи пишутся в PostgreSQL.
 
 Read-модель:
 
-- `directory_service` хранит кэшированные ответы списков директорий и файлов в Redis.
-- `file_service` хранит кэшированные ответы файлов в Redis.
+- ответы на read-запросы кэшируются в Redis.
 
-Синхронизация:
+События помогают синхронизировать read-модель. Например, после изменения файла `file_service` не лезет напрямую в логику `directory_service`, а отправляет событие. `directory_service` сам решает, что по этому событию нужно сбросить кэш списка файлов.
 
-- После изменения файла `file_service` публикует событие.
-- `directory_service` получает событие и инвалидирует read-модель `GET /v1/directories/{directory_id}/files`.
-- Следующий read-запрос пересобирает актуальный ответ из базы и снова кладет его в Redis.
-
-Такой подход отделяет запись в бизнес-хранилище от обновления read-модели и снижает связанность сервисов.
+Гарантия доставки выбрана `at-least-once`. Повторная доставка события не страшна, потому что повторная инвалидация Redis-кэша безопасна.
